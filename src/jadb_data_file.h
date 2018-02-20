@@ -1,10 +1,23 @@
 #ifndef JADB_DATA_FILE_H
 #define JADB_DATA_FILE_H
 
+#include "jadb_header.h"
+#include "jadb_logger.h"
+
 #include <fstream>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+
+#include <boost/serialization/string.hpp>
+#include <boost/serialization/vector.hpp>
+
 
 namespace jadb
 {
@@ -14,26 +27,45 @@ namespace jadb
 	public:
 		class Iterator{};
 	public:
-
+		using Input = boost::archive::text_iarchive;
+		using Output = boost::archive::text_oarchive;
 		DataFile(const std::string& path);
 		~DataFile();
-		size_t size();
+		const Header& header() const;
+		
 	protected:
-		size_t pos();
-		void seek(size_t pos);
-		void dataSeek(size_t pos);
-		void read(uint8_t* buff, size_t len);
-		void read(std::vector<uint8_t>& data);
 
-		void write(const uint8_t* buff, size_t len);
-		void write(const std::vector<uint8_t>& data);
+		template<class T>
+		void write(const T& obj, std::streampos offset)
+		{
+			{
+			Logger::msg() << "Writing at " << (int)(offset);
+			}
+			m_file.seekp(offset, std::ios::beg);
+			Output oa(m_file);
+			(oa) & obj;
+			m_file.flush();
+		}
+
+		template<class T>
+		void read(T& obj, std::streampos offset)
+		{
+			{
+			Logger::msg() << "Reading at " << (int)(offset);
+			}
+			Input ia(m_file);
+			m_file.seekg(offset, std::ios::beg);
+			(ia) & obj;
+		}
 
 		void flush();
 
-		friend class Header;
 		friend class Collection;
 	private:
-		std::unique_ptr<class Header> m_header;
+		std::string m_path;
+		std::shared_ptr<Input> m_ia;
+		std::shared_ptr<Output> m_oa;
+		Header m_header;
 		std::fstream m_file;
 	};
 

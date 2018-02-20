@@ -27,7 +27,7 @@ Logger::Error Logger::err()
 	return Error(log());
 }
 
-Logger::Debug Logger::debug()
+Logger::Debug Logger::dbg()
 {
 	return Debug(log());
 }
@@ -50,7 +50,7 @@ void Logger::Message::end()
 	m_ss.clear();
 	auto now = std::chrono::system_clock::now();
 	time_t ctime_now = (time_t)(std::chrono::system_clock::to_time_t(now));
-	m_ss << std::ctime(&ctime_now) << " ["<< m_level << "] : " << str << '\n';
+	m_ss << /* std::ctime(&ctime_now) <<*/ " ["<< m_level << "] : " << str << '\n';
 
 	m_instance.write(m_ss.str());
 	m_ss.str(std::string());

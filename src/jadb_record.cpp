@@ -1,11 +1,9 @@
 #include "jadb_record.h"
 #include "jadb_logger.h"
-#include <sstream>
-#include <boost/property_tree/json_parser.hpp>
 
 using namespace jadb;
 
-std::atomic<uint64_t> Record::NextId = 1;
+std::atomic<uint64_t> Record::NextId(1);
 
 Record::Record(uint64_t id)
 {

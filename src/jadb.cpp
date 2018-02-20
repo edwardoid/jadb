@@ -22,7 +22,7 @@ Database::Database(std::string root)
 			auto name = path.filename().generic_string();
 			auto msg = Logger::msg();
 			msg << "Found collection " << name;
-			m_collection.insert({ name, std::make_unique<Collection>(name, path, this) });
+			m_collection.insert(std::make_pair(name, std::make_unique<Collection>(name, path, this)));
 		}
 	}
 	
@@ -63,6 +63,6 @@ Collection& Database::create(std::string collection)
 		throw std::runtime_error("Creating directory failed");
 	}
 	Logger::msg() << "Creating collection " << collection << " as " << path.generic_string();
-	m_collection.insert({ collection, std::make_unique<Collection>(collection, path, this) });
+	m_collection.insert(std::make_pair(collection, std::make_unique<Collection>(collection, path, this)));
 	return *(m_collection[collection]);
 }

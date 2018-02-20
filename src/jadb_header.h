@@ -4,14 +4,12 @@
 #include <stdint.h>
 #include <memory>
 
-#include "jadb_data_file.h"
-
 namespace jadb
 {
 	class Header
 	{
 	public:
-		Header(DataFile& owner);
+		Header();
 		~Header();
 
 		uint32_t begin() const;
@@ -19,16 +17,20 @@ namespace jadb
 		uint32_t rows() const;
 
 		static size_t length();
-	protected:
-		void read();
-		void update();
+		template<class Archive>
+		void serialize(Archive& ar, const unsigned int version)
+		{
+			ar & m_data_begin;
+			ar & m_data_end;
+			ar & m_rows;
+		}
 
-		friend class DataFile;
 	private:
-		bool m_dirty;
-		DataFile & m_ref;
-		class HeaderData* m_data;
+		bool m_dirty = false;
+		uint32_t m_data_begin = 512 * 1024;
+		uint32_t m_data_end = 0;
+		uint32_t m_rows = 0;
 	};
 }
 
-#endif // JADB_DATA_FILE_H
+#endif // JADB_HEADER_H

@@ -42,7 +42,7 @@ namespace jadb
 
 		static Message msg();
 		static Error err();
-		static Debug debug();
+		static Debug dbg();
 
 	protected:
 		static Logger& log();

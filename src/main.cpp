@@ -1,7 +1,7 @@
 #include <jadb_logger.h>
 #include <jadb_data_file.h>
 #include <jadb.h>
-#include <boost\property_tree\ptree.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 const char* JSON_DATA = R"(
 {
@@ -15,7 +15,7 @@ const char* JSON_DATA = R"(
 
 void test()
 {
-	jadb::Database db("D:\\db");
+	jadb::Database db("/home/edward/Programming/jadb/tests");
 	jadb::Record entry(JSON_DATA);
 	db.create("users").insert(entry);
 	db.create("users").get(1);

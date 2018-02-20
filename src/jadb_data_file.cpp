@@ -1,61 +1,38 @@
 #include "jadb_data_file.h"
-#include "jadb_header.h"
 
+#include <stdio.h>
+#include <array>
+#include <boost/filesystem.hpp>
 using namespace jadb;
 
 DataFile::DataFile(const std::string& path)
+	: m_path(path)
 {
-	m_file.open(path, std::fstream::in | std::fstream::out | std::fstream::binary | std::fstream::app);
-	m_header = std::make_unique<Header>(*this);
-	if (size() < Header::length())
+	bool isNew = !boost::filesystem::exists(path);	
+	
+	Logger::msg() << (isNew ? "Creating new file " : "File found ") << path;
+	m_file.open(path, std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
+	
+	if(isNew)
 	{
-		m_header->update();
-	}	
+		write<Header>(m_header, 0);
+		
+		/*char empty[5000000];
+		for(int i = 0; i < 50; ++i)
+		{
+			m_file.write(empty, 5000000);
+		}*/
+		m_file.flush();
+	}
+	else
+	{
+		read(m_header, 0);
+	}
 }
 
-size_t DataFile::size()
+const Header& DataFile::header() const
 {
-	auto pos = m_file.tellg();
-
-
-	auto begin = m_file.tellg();
-	m_file.seekg(0, std::ios::end);
-	auto end = m_file.tellg();
-
-	m_file.seekg(pos);
-	return (end - begin);
-}
-
-
-size_t DataFile::pos()
-{
-	return m_file.tellg();
-}
-
-void DataFile::seek(size_t pos)
-{
-	m_file.seekp(pos, std::ios::beg);
-	m_file.seekg(pos, std::ios::beg);
-}
-
-void DataFile::dataSeek(size_t pos)
-{
-	seek(pos + Header::length());
-}
-
-void DataFile::read(uint8_t* buff, size_t len)
-{
-	m_file.read(reinterpret_cast<char*>(buff), len);
-}
-
-void DataFile::read(std::vector<uint8_t>& data)
-{
-	m_file.read(reinterpret_cast<char*>(buff), len);
-}
-
-void DataFile::write(const uint8_t* buff, size_t len)
-{
-	m_file.write(reinterpret_cast<const char*>(buff), len);
+	return m_header;
 }
 
 void DataFile::flush()

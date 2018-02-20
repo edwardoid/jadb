@@ -31,7 +31,7 @@ namespace jadb
 
 
 	template<typename KeyT, class Hash>
-	typename Mapper<KeyT, Hash>::Position Mapper<KeyT, Hash>::find(typename KeyT key)
+	typename Mapper<KeyT, Hash>::Position Mapper<KeyT, Hash>::find(KeyT key)
 	{
 		uint32_t val = static_cast<uint32_t>(m_hasher(key));
 		Position pos;
