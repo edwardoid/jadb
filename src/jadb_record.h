@@ -25,8 +25,8 @@ namespace jadb
 		uint64_t id();
 		void setId(uint64_t);
 		void generateId();
-		static const uint32_t RecordSignature = 0xDEADBEEF;
-		static const uint32_t MaxRecordSize = 5000000; // 5MB
+		static const uint32_t RecordSignature;
+		static const uint32_t MaxRecordSize;
 
 		std::ostream& view(std::ostream& os);
 	protected:

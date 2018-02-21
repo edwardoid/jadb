@@ -3,6 +3,9 @@
 #include "jadb_serialization.h"
 
 using namespace jadb;
+const uint32_t Record::RecordSignature = 0xDEADBEEF;
+const uint32_t Record::MaxRecordSize = 5000000; // 5MB
+
 
 std::atomic<uint64_t> Record::NextId(1);
 
@@ -44,7 +47,7 @@ void Record::setData(boost::property_tree::ptree props)
 {
 	if (props.get<uint64_t>("__id", 0) == 0)
 	{
-		props.put("__id", NextId.fetch_add(1));
+		props.put<uint64_t>("__id", NextId.fetch_add(1));
 	}
 
 	m_data = props;
@@ -57,7 +60,7 @@ uint64_t Record::id()
 
 void Record::setId(uint64_t id)
 {
-	m_data.put("__id", id);
+	m_data.put<uint64_t>("__id", id);
 }
 
 void Record::generateId()

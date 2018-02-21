@@ -36,7 +36,7 @@ void test()
 
 	databases.insert(std::make_pair("first", db));
 
-	jadb::HttpServer srv(8080, databases);
+	jadb::HttpServer srv(80, databases);
 	srv.start();
 }
 
