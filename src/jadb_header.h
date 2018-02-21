@@ -11,19 +11,13 @@ namespace jadb
 	public:
 		Header();
 		~Header();
-
+		
+		void setRows(uint32_t rows);
 		uint32_t begin() const;
 		uint32_t end() const;
 		uint32_t rows() const;
 
 		static size_t length();
-		template<class Archive>
-		void serialize(Archive& ar, const unsigned int version)
-		{
-			ar & m_data_begin;
-			ar & m_data_end;
-			ar & m_rows;
-		}
 
 	private:
 		bool m_dirty = false;

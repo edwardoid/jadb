@@ -22,7 +22,8 @@ Database::Database(std::string root)
 			auto name = path.filename().generic_string();
 			auto msg = Logger::msg();
 			msg << "Found collection " << name;
-			m_collection.insert(std::make_pair(name, std::make_unique<Collection>(name, path, this)));
+			auto collection = std::make_shared<Collection>(name, path, this);
+			m_collection.emplace(std::make_pair(name, collection));
 		}
 	}
 	
@@ -32,7 +33,7 @@ Database::~Database()
 {
 }
 
-std::unordered_map<std::string, std::unique_ptr<Collection>>& Database::collections()
+std::unordered_map<std::string, std::shared_ptr<Collection>>& Database::collections()
 {
 	return m_collection;
 }

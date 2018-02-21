@@ -1,0 +1,4 @@
+[submodule "3dp/sws"]
+	path = 3dp/sws
+	url = https://github.com/eidheim/Simple-Web-Server.git
+	branch = master

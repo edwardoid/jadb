@@ -1,5 +1,6 @@
 #include "jadb_record.h"
 #include "jadb_logger.h"
+#include "jadb_serialization.h"
 
 using namespace jadb;
 
@@ -32,6 +33,13 @@ Record::Record(const std::vector<uint8_t>& raw)
 	: Record(std::string(raw.cbegin(), raw.cbegin() + raw.size()))
 {}
 
+
+std::ostream& Record::view(std::ostream& os)
+{
+	boost::property_tree::write_json(os, m_data);
+	return os;
+}
+
 void Record::setData(boost::property_tree::ptree props)
 {
 	if (props.get<uint64_t>("__id", 0) == 0)
@@ -52,12 +60,9 @@ void Record::setId(uint64_t id)
 	m_data.put("__id", id);
 }
 
-std::vector<uint8_t> Record::raw() const
+void Record::generateId()
 {
-	std::ostringstream ss;
-	boost::property_tree::write_json(ss, m_data, false);
-	auto str = ss.str();
-	return std::vector<uint8_t>(str.cbegin(), str.cend());
+	setId(NextId.fetch_add(1));
 }
 
 Record::~Record()

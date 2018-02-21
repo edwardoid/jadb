@@ -5,6 +5,11 @@ using namespace jadb;
 Header::Header()
 {}
 
+void Header::setRows(uint32_t rows)
+{
+	m_rows = rows;
+}
+
 uint32_t Header::begin() const
 {
 	return m_data_begin;

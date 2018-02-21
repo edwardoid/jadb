@@ -3,21 +3,14 @@
 
 #include "jadb_header.h"
 #include "jadb_logger.h"
+#include "jadb_serialization.h"
 
-#include <fstream>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/vector.hpp>
-
+#include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem.hpp>
 
 namespace jadb
 {
@@ -27,12 +20,11 @@ namespace jadb
 	public:
 		class Iterator{};
 	public:
-		using Input = boost::archive::text_iarchive;
-		using Output = boost::archive::text_oarchive;
-		DataFile(const std::string& path);
+		DataFile(const boost::filesystem::path& path, std::shared_ptr<class Collection> collection);
 		~DataFile();
 		const Header& header() const;
-		
+		void recordAdded();
+		void recordRemoved();
 	protected:
 
 		template<class T>
@@ -42,8 +34,9 @@ namespace jadb
 			Logger::msg() << "Writing at " << (int)(offset);
 			}
 			m_file.seekp(offset, std::ios::beg);
-			Output oa(m_file);
-			(oa) & obj;
+			m_file.seekg(offset, std::ios::beg);
+			Serialization oa(m_file);
+			oa.serialize(obj);
 			m_file.flush();
 		}
 
@@ -53,20 +46,27 @@ namespace jadb
 			{
 			Logger::msg() << "Reading at " << (int)(offset);
 			}
-			Input ia(m_file);
 			m_file.seekg(offset, std::ios::beg);
-			(ia) & obj;
+			m_file.seekp(offset, std::ios::beg);
+			Serialization oa(m_file);
+			oa.deserialize(obj);
+		}
+
+		bool checkSignature(uint32_t expected, std::streampos offset)
+		{
+			uint32_t sig = expected;
+			read(sig, offset);
+			return sig == expected;
 		}
 
 		void flush();
 
 		friend class Collection;
 	private:
-		std::string m_path;
-		std::shared_ptr<Input> m_ia;
-		std::shared_ptr<Output> m_oa;
+		std::shared_ptr<class Collection> m_collection;
+		boost::filesystem::path m_path;
 		Header m_header;
-		std::fstream m_file;
+		boost::filesystem::fstream m_file;
 	};
 
 }

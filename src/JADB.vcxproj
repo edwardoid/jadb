@@ -19,14 +19,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\tests\main.cpp" />
     <ClCompile Include="Files.cpp" />
     <ClCompile Include="jadb_collection.cpp" />
     <ClCompile Include="jadb.cpp" />
     <ClCompile Include="jadb_data_file.cpp" />
     <ClCompile Include="jadb_header.cpp" />
+    <ClCompile Include="jadb_http_server.cpp" />
+    <ClCompile Include="jadb_http_url_builder.cpp" />
     <ClCompile Include="jadb_logger.cpp" />
     <ClCompile Include="jadb_record.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="jadb_serizalization.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="jadb_collection.h" />
@@ -34,9 +37,12 @@
     <ClInclude Include="jadb_data_file.h" />
     <ClInclude Include="jadb_files.h" />
     <ClInclude Include="jadb_header.h" />
+    <ClInclude Include="jadb_http_server.h" />
+    <ClInclude Include="jadb_http_url_builder.h" />
     <ClInclude Include="jadb_logger.h" />
     <ClInclude Include="jadb_mapper.h" />
     <ClInclude Include="jadb_record.h" />
+    <ClInclude Include="jadb_serialization.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -108,10 +114,10 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\..\lib\bson\src;$(SolutionDir)\..\src;D:\boost_1_66_0</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\3dp;$(SolutionDir)\..\src;D:\boost_1_66_0</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>D:\boost\boost\bin.v2\libs\system\build\msvc-14.1\debug\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\filesystem\build\msvc-14.1\debug\address-model-64\link-static\threadapi-win32\threading-multi;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\boost\boost\bin.v2\libs\regex\build\msvc-14.1\debug\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\date_time\build\msvc-14.1\debug\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\system\build\msvc-14.1\debug\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\filesystem\build\msvc-14.1\debug\address-model-64\link-static\threadapi-win32\threading-multi;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

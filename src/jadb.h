@@ -16,12 +16,12 @@ namespace jadb
 	public:
 		Database(std::string root = ".");
 		~Database();
-		std::unordered_map<std::string, std::unique_ptr<Collection>>& collections();
+		std::unordered_map<std::string, std::shared_ptr<Collection>>& collections();
 		Collection& operator[] (const std::string name);
 		bool has(std::string colelction) const;
 		Collection& create(std::string collection);
 	private:
-		std::unordered_map<std::string, std::unique_ptr<Collection>> m_collection;
+		std::unordered_map<std::string, std::shared_ptr<Collection>> m_collection;
 		boost::filesystem::path m_path;
 	};
 }
