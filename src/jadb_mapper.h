@@ -35,8 +35,7 @@ namespace jadb
 	template<typename KeyT, class Hash>
 	typename Mapper<KeyT, Hash>::Position Mapper<KeyT, Hash>::find(KeyT key)
 	{
-		uint32_t val = static_cast<uint32_t>(m_hasher(key));
-		val = key;
+		uint32_t val = static_cast<uint32_t>(key);
 		Position pos;
 		pos.Bucket = val / m_capacity;
 		pos.Offset = val % m_buckets;

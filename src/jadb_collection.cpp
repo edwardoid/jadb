@@ -92,7 +92,7 @@ Record Collection::get(uint64_t id)
 	Record rec(0);
 
 	if(file.checkSignature(Record::RecordSignature, offset))
-	file.read(rec, offset);
+		file.read(rec, offset);
 
 	return rec;
 }

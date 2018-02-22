@@ -21,9 +21,9 @@ namespace jadb
 			~Message() { end(); }
 			void end();
 		protected:
+			Logger& m_instance;
 			std::string m_level;
 			std::stringstream m_ss;
-			Logger& m_instance;
 		};
 
 		class Error : public Message
