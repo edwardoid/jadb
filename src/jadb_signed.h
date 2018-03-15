@@ -10,8 +10,8 @@ namespace jadb
     struct SignedItem
     {
         SignedItem() {}
-        static const uint32_t ValidSignature = Val;
-        static const uint32_t InvalidSignature = ~Val;
+        static const uint32_t ValidSignature;
+        static const uint32_t InvalidSignature;
         static void sign(std::shared_ptr<File> file)
         {
             file->write(reinterpret_cast<const char*>(&ValidSignature), sizeof(ValidSignature));
@@ -29,6 +29,12 @@ namespace jadb
             return sig == ValidSignature;
         }
     };
+
+    template<uint32_t Val>
+    const uint32_t SignedItem<Val>::ValidSignature = Val; 
+
+    template<uint32_t Val>
+    const uint32_t SignedItem<Val>::InvalidSignature = ~Val; 
 }
 
 #endif // JADB_SIGNED_H

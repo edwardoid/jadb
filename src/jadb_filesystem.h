@@ -5,7 +5,7 @@
 #include <string>
 #include <memory>
 #include "jadb_file.h"
-#include <boost\filesystem\path.hpp>
+#include <boost/filesystem/path.hpp>
 
 namespace jadb
 {
