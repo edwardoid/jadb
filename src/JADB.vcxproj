@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -19,10 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Files.cpp" />
     <ClCompile Include="jadb_collection.cpp" />
     <ClCompile Include="jadb.cpp" />
     <ClCompile Include="jadb_data_file.cpp" />
+    <ClCompile Include="jadb_file.cpp" />
+    <ClCompile Include="jadb_filesystem.cpp" />
     <ClCompile Include="jadb_header.cpp" />
     <ClCompile Include="jadb_http_server.cpp" />
     <ClCompile Include="jadb_http_url_builder.cpp" />
@@ -35,10 +36,13 @@
     <ClInclude Include="jadb_collection.h" />
     <ClInclude Include="jadb.h" />
     <ClInclude Include="jadb_data_file.h" />
+    <ClInclude Include="jadb_file.h" />
     <ClInclude Include="jadb_files.h" />
+    <ClInclude Include="jadb_filesystem.h" />
     <ClInclude Include="jadb_header.h" />
     <ClInclude Include="jadb_http_server.h" />
     <ClInclude Include="jadb_http_url_builder.h" />
+    <ClInclude Include="jadb_index_file.h" />
     <ClInclude Include="jadb_logger.h" />
     <ClInclude Include="jadb_mapper.h" />
     <ClInclude Include="jadb_record.h" />
