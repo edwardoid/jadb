@@ -1,7 +1,8 @@
 #ifndef JADB_SERIALIZATION_H
 #define JADB_SERIALIZATION_H
 
-#include <fstream>
+#include "jadb_file.h"
+#include <memory>
 #include <vector>
 
 namespace jadb
@@ -9,23 +10,23 @@ namespace jadb
 	class Serialization
 	{
 	public: 
-		Serialization(std::fstream& stream)
+		Serialization(std::shared_ptr<File> stream)
 			: m_stream(stream) {}
 		~Serialization() = default;
 
 		template<typename T>
 		void serialize(const T& obj)
 		{
-			m_stream.write(reinterpret_cast<const char*>(&obj), sizeof(obj));
+			m_stream->stream().write(reinterpret_cast<const char*>(&obj), sizeof(obj));
 		}
 
 		template<typename T>
 		void deserialize(T& obj)
 		{
-			m_stream.read(reinterpret_cast<char*>(&obj), sizeof(obj));
+			m_stream->stream().read(reinterpret_cast<char*>(&obj), sizeof(obj));
 		}
 	private:
-		std::fstream& m_stream;
+		std::shared_ptr<File> m_stream;
 	};
 
 	template<>
@@ -33,7 +34,7 @@ namespace jadb
 	{
 		Serialization len(m_stream);
 		len.serialize(static_cast<uint32_t>(obj.size()));
-		m_stream.write(obj.data(), obj.size());
+		m_stream->stream().write(obj.data(), obj.size());
 	}
 
 	template<>
@@ -45,7 +46,7 @@ namespace jadb
 		obj.resize(sz);
 		if (sz > 0)
 		{
-			m_stream.read(const_cast<char*>(obj.data()), sz);
+			m_stream->stream().read(const_cast<char*>(obj.data()), sz);
 		}
 	}
 }

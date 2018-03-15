@@ -10,6 +10,11 @@ File::File(boost::filesystem::path path, std::ios::openmode mode, bool open)
 		this->open(mode);
 }
 
+boost::filesystem::fstream& File::stream()
+{
+    return m_stream;
+}
+
 void File::open(std::ios::openmode mode)
 {
 	Lock lock(*this);

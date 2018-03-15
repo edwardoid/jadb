@@ -3,32 +3,34 @@
 #include <stdio.h>
 #include <array>
 #include "jadb_collection.h"
+#include "jadb_filesystem.h"
 using namespace jadb;
 
 DataFile::DataFile(const boost::filesystem::path& path, std::shared_ptr<Collection> collection)
 	: m_collection(collection), m_path(path)
 {
 	bool isNew = !boost::filesystem::exists(path);
+
+    m_file = FileSystem::Get(path);
 	
-	Logger::msg() << (isNew ? "Creating new file " : "File found ") << path.generic_string();
-	m_file.open(path, std::ios::in | std::ios::out | std::ios::binary);
+    Logger::msg() << (isNew ? "Creating new file " : "File found ") << path.generic_string();
 	
 	if(isNew)
 	{
-		m_file.close();
-		m_file.open(path, std::ios::in | std::ios::out | std::ios::app);
+        m_file->close();
+        m_file->open();
 		write<Header>(m_header, 0);
 		
 		char* empty = new char[Record::MaxRecordSize];
 		memset(empty, 0, Record::MaxRecordSize);
 		for(uint32_t i = 0; i < m_collection->recordsPerFile(); ++i)
 		{
-			m_file.write(empty, Record::MaxRecordSize);
-			m_file.flush();
+			m_file->stream().write(empty, Record::MaxRecordSize);
+			m_file->stream().flush();
 		}
 		delete []empty;
-		m_file.close();
-		m_file.open(path, std::ios::in | std::ios::out | std::ios::binary);
+		m_file->close();
+		m_file->open();
 	}
 	else
 	{
@@ -53,7 +55,7 @@ void DataFile::recordRemoved()
 
 void DataFile::flush()
 {
-	m_file.flush();
+	m_file->stream().flush();
 }
 
 DataFile::~DataFile()

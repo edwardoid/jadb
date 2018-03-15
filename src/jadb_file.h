@@ -11,7 +11,7 @@ namespace jadb
 	public:
 		File(boost::filesystem::path path, std::ios::openmode mode = std::ios::in | std::ios::out | std::ios::binary, bool open = true);
 		~File();
-		const boost::filesystem::fstream& stream();
+		boost::filesystem::fstream& stream();
 		const boost::filesystem::path& path() const;
 		size_t size();
 		void open(std::ios::openmode mode = std::ios::in | std::ios::out | std::ios::binary);

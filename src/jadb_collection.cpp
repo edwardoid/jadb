@@ -12,7 +12,6 @@ Collection::Collection(std::string name, boost::filesystem::path path, class Dat
 {
 }
 
-
 Collection::~Collection()
 {
 }

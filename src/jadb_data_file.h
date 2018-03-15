@@ -4,6 +4,7 @@
 #include "jadb_header.h"
 #include "jadb_logger.h"
 #include "jadb_serialization.h"
+#include "jadb_file.h"
 
 #include <memory>
 #include <string>
@@ -33,11 +34,10 @@ namespace jadb
 			{
 			Logger::msg() << "Writing at " << (int)(offset);
 			}
-			m_file.seekp(offset, std::ios::beg);
-			m_file.seekg(offset, std::ios::beg);
+            m_file->seekForWrite(offset);
 			Serialization oa(m_file);
 			oa.serialize(obj);
-			m_file.flush();
+			m_file->stream().flush();
 		}
 
 		template<class T>
@@ -46,8 +46,7 @@ namespace jadb
 			{
 			Logger::msg() << "Reading at " << (int)(offset);
 			}
-			m_file.seekg(offset, std::ios::beg);
-			m_file.seekp(offset, std::ios::beg);
+            m_file->seekForRead(offset);
 			Serialization oa(m_file);
 			oa.deserialize(obj);
 		}
@@ -66,7 +65,7 @@ namespace jadb
 		std::shared_ptr<class Collection> m_collection;
 		boost::filesystem::path m_path;
 		Header m_header;
-		boost::filesystem::fstream m_file;
+        std::shared_ptr<File> m_file;
 	};
 
 }
