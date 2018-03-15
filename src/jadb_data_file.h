@@ -37,7 +37,7 @@ namespace jadb
             m_file->seekForWrite(offset);
 			Serialization oa(m_file);
 			oa.serialize(obj);
-			m_file->stream().flush();
+			m_file->flush();
 		}
 
 		template<class T>

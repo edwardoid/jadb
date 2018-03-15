@@ -11,7 +11,7 @@ namespace jadb
 	public:
 		File(boost::filesystem::path path, std::ios::openmode mode = std::ios::in | std::ios::out | std::ios::binary, bool open = true);
 		~File();
-		boost::filesystem::fstream& stream();
+		const boost::filesystem::fstream& stream() const;
 		const boost::filesystem::path& path() const;
 		size_t size();
 		void open(std::ios::openmode mode = std::ios::in | std::ios::out | std::ios::binary);
@@ -20,6 +20,9 @@ namespace jadb
 		bool closed() const;
 		void seekForRead(std::streampos pos);
 		void seekForWrite(std::streampos pos);
+        void write(const char* data, size_t size);
+        void read(char* data, size_t size);
+        void flush();
 		void lock();
 		void unlock();
 

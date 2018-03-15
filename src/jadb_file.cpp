@@ -10,7 +10,7 @@ File::File(boost::filesystem::path path, std::ios::openmode mode, bool open)
 		this->open(mode);
 }
 
-boost::filesystem::fstream& File::stream()
+const boost::filesystem::fstream& File::stream() const
 {
     return m_stream;
 }
@@ -55,6 +55,23 @@ void File::seekForWrite(std::ios::streampos pos)
 	Lock lock(*this);
 	if (m_stream.is_open())
 		m_stream.seekp(pos);
+}
+
+void File::write(const char* data, size_t size)
+{
+    Lock lock(*this);
+    m_stream.write(data, size);
+}
+
+void File::read(char* data, size_t size)
+{
+    Lock lock(*this);
+    m_stream.read(data, size);
+}
+void File::flush()
+{
+    Lock lock(*this);
+    m_stream.flush();
 }
 
 void File::lock()

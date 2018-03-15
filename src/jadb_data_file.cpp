@@ -25,8 +25,8 @@ DataFile::DataFile(const boost::filesystem::path& path, std::shared_ptr<Collecti
 		memset(empty, 0, Record::MaxRecordSize);
 		for(uint32_t i = 0; i < m_collection->recordsPerFile(); ++i)
 		{
-			m_file->stream().write(empty, Record::MaxRecordSize);
-			m_file->stream().flush();
+			m_file->write(empty, Record::MaxRecordSize);
+			m_file->flush();
 		}
 		delete []empty;
 		m_file->close();
@@ -55,7 +55,7 @@ void DataFile::recordRemoved()
 
 void DataFile::flush()
 {
-	m_file->stream().flush();
+	m_file->flush();
 }
 
 DataFile::~DataFile()
