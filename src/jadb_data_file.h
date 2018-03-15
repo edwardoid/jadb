@@ -4,7 +4,8 @@
 #include "jadb_header.h"
 #include "jadb_logger.h"
 #include "jadb_serialization.h"
-#include "jadb_file.h"
+#include "jadb_iterative_file.h"
+#include "jadb_record.h"
 
 #include <memory>
 #include <string>
@@ -16,57 +17,56 @@
 namespace jadb
 {
 
-	class DataFile
-	{
-	public:
-		class Iterator{};
-	public:
-		DataFile(const boost::filesystem::path& path, std::shared_ptr<class Collection> collection);
-		~DataFile();
-		const Header& header() const;
-		void recordAdded();
-		void recordRemoved();
-	protected:
+    class DataFile: public IterativeFile<Record>
+    {
+    public:
+        DataFile(const boost::filesystem::path& path, std::shared_ptr<class Collection> collection);
+        ~DataFile();
+        const Header& header() const;
+        void recordAdded();
+        void recordRemoved();
+    protected:
 
-		template<class T>
-		void write(const T& obj, std::streampos offset)
-		{
-			{
-			Logger::msg() << "Writing at " << (int)(offset);
-			}
+        template<class T>
+        void write(const T& obj, std::streampos offset)
+        {
+            {
+            Logger::msg() << "Writing at " << (int)(offset);
+            }
+            File::Lock lock(*m_file);
             m_file->seekForWrite(offset);
-			Serialization oa(m_file);
-			oa.serialize(obj);
-			m_file->flush();
-		}
+            Serialization oa(m_file);
+            oa.serialize(obj);
+            m_file->flush();
+        }
 
-		template<class T>
-		void read(T& obj, std::streampos offset)
-		{
-			{
-			Logger::msg() << "Reading at " << (int)(offset);
-			}
+        template<class T>
+        void read(T& obj, std::streampos offset)
+        {
+            {
+            Logger::msg() << "Reading at " << (int)(offset);
+            }
             m_file->seekForRead(offset);
-			Serialization oa(m_file);
-			oa.deserialize(obj);
-		}
+            Serialization oa(m_file);
+            oa.deserialize(obj);
+        }
 
-		bool checkSignature(uint32_t expected, std::streampos offset)
-		{
-			uint32_t sig = expected;
-			read(sig, offset);
-			return sig == expected;
-		}
+        bool checkSignature(uint32_t expected, std::streampos offset)
+        {
+            uint32_t sig = expected;
+            read(sig, offset);
+            return sig == expected;
+        }
 
-		void flush();
+        void flush();
 
-		friend class Collection;
-	private:
-		std::shared_ptr<class Collection> m_collection;
-		boost::filesystem::path m_path;
-		Header m_header;
+        friend class Collection;
+    private:
+        std::shared_ptr<class Collection> m_collection;
+        boost::filesystem::path m_path;
+        Header m_header;
         std::shared_ptr<File> m_file;
-	};
+    };
 
 }
 

@@ -12,31 +12,31 @@
 
 namespace jadb
 {
-	class Collection: public std::enable_shared_from_this<Collection>
-	{
-	public:
-		Collection(std::string name, boost::filesystem::path path, class Database*);
-		std::string name() const;
-		~Collection();
+    class Collection: public std::enable_shared_from_this<Collection>
+    {
+    public:
+        Collection(std::string name, boost::filesystem::path path, class Database*);
+        std::string name() const;
+        ~Collection();
 
-		void lock();
-		void unlock();
+        void lock();
+        void unlock();
 
-		uint64_t insert(Record& record);
-		void remove(uint64_t id);
-		bool contains(uint64_t id);
-		Record get(uint64_t);
-		uint32_t recordsPerFile() const;
-	private:
-		DataFile& bucket(uint32_t num);
-	private:
-		std::string m_name;
-		boost::filesystem::path m_path;
-		class Database* m_db;
-		std::recursive_mutex m_mx;
-		std::unordered_map < std::string, std::shared_ptr<DataFile>> m_files;
-		Mapper<uint64_t> m_mapper;
-	};
+        uint64_t insert(Record& record);
+        void remove(uint64_t id);
+        bool contains(uint64_t id);
+        Record get(uint64_t);
+        uint32_t recordsPerFile() const;
+    private:
+        DataFile& bucket(uint32_t num);
+    private:
+        std::string m_name;
+        boost::filesystem::path m_path;
+        class Database* m_db;
+        std::recursive_mutex m_mx;
+        std::unordered_map < std::string, std::shared_ptr<DataFile>> m_files;
+        Mapper<uint64_t> m_mapper;
+    };
 }
 
 #endif // JADB_COLLECTION_H

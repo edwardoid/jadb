@@ -15,8 +15,8 @@ FileSystem::~FileSystem()
 
 std::shared_ptr<File> FileSystem::Get(boost::filesystem::path file)
 {
-	auto it = m_files.find(file.generic_string());
-	if (it == m_files.end())
-		m_files.insert({ file.generic_string(), std::make_shared<File>(file) });
-	return m_files[file.generic_string()];
+    auto it = m_files.find(file.generic_string());
+    if (it == m_files.end())
+        m_files.insert({ file.generic_string(), std::make_shared<File>(file) });
+    return m_files[file.generic_string()];
 }

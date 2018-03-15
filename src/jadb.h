@@ -10,20 +10,20 @@
 
 namespace jadb
 {
-	class Collection;
-	class Database
-	{
-	public:
-		Database(std::string root = ".");
-		~Database();
-		std::unordered_map<std::string, std::shared_ptr<Collection>>& collections();
-		Collection& operator[] (const std::string name);
-		bool has(std::string colelction) const;
-		Collection& create(std::string collection);
-	private:
-		std::unordered_map<std::string, std::shared_ptr<Collection>> m_collection;
-		boost::filesystem::path m_path;
-	};
+    class Collection;
+    class Database
+    {
+    public:
+        Database(std::string root = ".");
+        ~Database();
+        std::unordered_map<std::string, std::shared_ptr<Collection>>& collections();
+        Collection& operator[] (const std::string name);
+        bool has(std::string colelction) const;
+        Collection& create(std::string collection);
+    private:
+        std::unordered_map<std::string, std::shared_ptr<Collection>> m_collection;
+        boost::filesystem::path m_path;
+    };
 }
 
 #endif // JADB_H

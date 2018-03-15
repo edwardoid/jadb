@@ -95,5 +95,11 @@
     <ClInclude Include="jadb_index_file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="jadb_iterative_file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jadb_signed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -10,38 +10,38 @@
 
 const char* JSON_DATA = R"(
 {
-	"employees":[
-		{"firstName":"John", "lastName" : "Doe"},
-		{ "firstName":"Anna", "lastName" : "Smith" },
-		{ "firstName":"Peter", "lastName" : "Jones" }
-	]
+    "employees":[
+        {"firstName":"John", "lastName" : "Doe"},
+        { "firstName":"Anna", "lastName" : "Smith" },
+        { "firstName":"Peter", "lastName" : "Jones" }
+    ]
 }
 )";
 
 void test()
 {
-	std::unordered_map<std::string, std::shared_ptr<jadb::Database>> databases;
+    std::unordered_map<std::string, std::shared_ptr<jadb::Database>> databases;
 #ifdef __linux__
-	auto db = std::make_shared<jadb::Database>("/home/edward/Programming/jadb/tests");
+    auto db = std::make_shared<jadb::Database>("/home/edward/Programming/jadb/tests");
 #else
-	auto db = std::make_shared<jadb::Database>("D:\\db");
+    auto db = std::make_shared<jadb::Database>("D:\\db");
 #endif // __linux
-	jadb::Record entry(JSON_DATA);
-	db->create("users").insert(entry);
-	db->create("users").get(1);
-	assert(db->create("users").contains(1));
-	
-	db->create("admins");
-	db->create("logs");
+    jadb::Record entry(JSON_DATA);
+    db->create("users").insert(entry);
+    db->create("users").get(1);
+    assert(db->create("users").contains(1));
+    
+    db->create("admins");
+    db->create("logs");
 
-	databases.insert(std::make_pair("first", db));
+    databases.insert(std::make_pair("first", db));
 
-	jadb::HttpServer srv(80, databases);
-	srv.start();
+    jadb::HttpServer srv(80, databases);
+    srv.start();
 }
 
 int main(int argc, char** argv)
 {
-	test();
-	return EXIT_SUCCESS;
+    test();
+    return EXIT_SUCCESS;
 }

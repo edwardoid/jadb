@@ -6,21 +6,21 @@
 
 namespace jadb
 {
-	class UrlBuilder
-	{
-	public:
-		UrlBuilder() = default;
-		~UrlBuilder() = default;
+    class UrlBuilder
+    {
+    public:
+        UrlBuilder() = default;
+        ~UrlBuilder() = default;
 
-		UrlBuilder& string();
-		UrlBuilder& word(std::string work);
-		UrlBuilder& number();
+        UrlBuilder& string();
+        UrlBuilder& word(std::string work);
+        UrlBuilder& number();
 
-		std::string url();
+        std::string url();
 
-		std::vector<std::string> parse(std::string& url) const;
-	private:
-		std::vector<std::string> m_componenets;
-	};
+        std::vector<std::string> parse(std::string& url) const;
+    private:
+        std::vector<std::string> m_componenets;
+    };
 }
 #endif // JADB_HTTP_URL_BUILDER

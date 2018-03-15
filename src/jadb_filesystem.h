@@ -9,15 +9,15 @@
 
 namespace jadb
 {
-	class FileSystem
-	{
-	public:
-		FileSystem();
-		~FileSystem();
-		static std::shared_ptr<File> Get(boost::filesystem::path file);
-	private:
-		static std::unordered_map<std::string, std::shared_ptr<File>> m_files;
-	};
+    class FileSystem
+    {
+    public:
+        FileSystem();
+        ~FileSystem();
+        static std::shared_ptr<File> Get(boost::filesystem::path file);
+    private:
+        static std::unordered_map<std::string, std::shared_ptr<File>> m_files;
+    };
 }
 
 #endif // JADB_FILESYSTEM_H
