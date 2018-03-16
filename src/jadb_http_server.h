@@ -3,6 +3,7 @@
 
 #include "sws/server_http.hpp"
 #include "jadb.h"
+#include "jadb_rest_endpoints.h"
 #include <string>
 #include <memory>
 #include <unordered_map>
@@ -19,6 +20,7 @@ namespace jadb
     private:
         void setupEndpoints();
     private:
+        RESTApi m_api;
         SimpleWeb::Server<SimpleWeb::HTTP> m_srv;
         std::unordered_map<std::string, std::shared_ptr<Database>> m_databases;
     };
