@@ -22,6 +22,8 @@ namespace jadb
         bool closed() const;
         void seekForRead(std::streampos pos);
         void seekForWrite(std::streampos pos);
+        std::streampos readPosition();
+        std::streampos writePosition();
         void write(const char* data, size_t size);
         void read(char* data, size_t size);
         void flush();

@@ -15,6 +15,12 @@ const boost::filesystem::fstream& File::stream() const
     return m_stream;
 }
 
+size_t File::size()
+{
+    Lock lock(*this);
+    return boost::filesystem::file_size(m_path);
+}
+
 void File::open(std::ios::openmode mode)
 {
     Lock lock(*this);
@@ -55,6 +61,18 @@ void File::seekForWrite(std::ios::streampos pos)
     Lock lock(*this);
     if (m_stream.is_open())
         m_stream.seekp(pos);
+}
+
+std::ios::streampos File::readPosition()
+{
+    Lock lock(*this);
+    return m_stream.tellg();
+}
+
+std::ios::streampos File::writePosition()
+{
+    Lock lock(*this);
+    return m_stream.tellp();
 }
 
 void File::write(const char* data, size_t size)

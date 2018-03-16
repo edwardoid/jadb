@@ -1,6 +1,7 @@
 #include "jadb_logger.h"
 #include <chrono>
-#include <ctime>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
 
 #pragma warning(disable : 4996)
 
@@ -48,9 +49,10 @@ void Logger::Message::end()
 
     m_ss.str(std::string());
     m_ss.clear();
-    auto now = std::chrono::system_clock::now();
-    time_t ctime_now = (time_t)(std::chrono::system_clock::to_time_t(now));
-    m_ss << /* std::ctime(&ctime_now) <<*/ " ["<< m_level << "] : " << str << '\n';
+    
+    const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
+
+    m_ss << boost::posix_time::to_simple_string(now) << " ["<< m_level << "] : " << str << '\n';
 
     m_instance.write(m_ss.str());
     m_ss.str(std::string());

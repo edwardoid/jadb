@@ -27,19 +27,23 @@ namespace jadb
         Record(boost::property_tree::ptree object);
         Record(const std::vector<uint8_t>& raw);
         ~Record();
-        uint64_t id();
+        uint64_t id() const;
         void setId(uint64_t);
         void generateId();
         static const uint32_t RecordSignature;
         static const uint32_t MaxRecordSize;
 
         std::ostream& view(std::ostream& os);
+
+        std::string operator[] (const char* prop) const;
+        std::string operator[] (const std::string& prop) const;
+
     protected:
         void setData(boost::property_tree::ptree object);
         const boost::property_tree::ptree& data() const { return m_data; }
         static std::atomic<uint64_t> NextId;
     protected:
-
+        friend class RESTApi;
         friend class Serialization;
         boost::property_tree::ptree m_data;
     };
@@ -64,7 +68,6 @@ namespace jadb
     inline void Serialization::deserialize(Record& obj)
     {
         std::string json;
-        uint32_t signature;
         if(!SignedItem<RECORD_SIGNATURE>::isSigned(m_stream))
         {
             throw std::runtime_error("Bad signature for record");

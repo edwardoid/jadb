@@ -178,3 +178,136 @@ void RESTApi::deleteRecord(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Resp
     rec.view(ss);
     response->write(ss);
 }
+
+void RESTApi::createIndex(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request)
+{
+    auto urlRaw = request->path_match[0].str();
+    auto tokens = url.parse(urlRaw);
+
+    auto database = tokens[0];
+    auto collection = tokens[1];
+    auto name = tokens[3];
+
+    auto dbPos = m_databases.find(database);
+    if (dbPos == m_databases.cend())
+    {
+        response->write(SimpleWeb::StatusCode::client_error_not_found);
+        return;
+    }
+
+    auto db = dbPos->second;
+
+    auto colPos = db->collections().find(collection);
+    if (colPos == db->collections().cend())
+    {
+        response->write(SimpleWeb::StatusCode::client_error_not_found);
+        return;
+    }
+
+    std::istringstream is(request->content.string());
+    try
+    {
+        boost::property_tree::ptree fields;
+        boost::property_tree::read_json(is, fields);
+        if (fields.empty())
+        {
+            response->write(SimpleWeb::StatusCode::client_error_bad_request);
+            return;
+        }
+        auto fieldsPos = fields.find("fields");
+        std::vector<std::string> names;
+        auto fieldsChild = fields.get_child_optional("fields");
+        if (!fieldsChild)
+        {
+            response->write(SimpleWeb::StatusCode::client_error_bad_request);
+            return;
+        }
+
+        for (auto i = fieldsChild.get().begin(); i != fieldsChild.get().end(); ++i)
+        {
+            auto f = i->second.get_value<std::string>("");
+            if (f.empty())
+                continue;
+            names.push_back(f);
+        }
+        std::sort(names.begin(), names.end());
+        auto col = colPos->second;
+        col->createIndex(name, names);
+    }
+    catch (boost::property_tree::json_parser_error e)
+    {
+        response->write(SimpleWeb::StatusCode::client_error_bad_request);
+    }
+
+    response->write(SimpleWeb::StatusCode::success_created);
+}
+
+void RESTApi::searchByIndex(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request)
+{
+    auto urlRaw = request->path_match[0].str();
+    auto tokens = url.parse(urlRaw);
+
+    auto database = tokens[0];
+    auto collection = tokens[1];
+    auto name = tokens[4];
+
+    auto dbPos = m_databases.find(database);
+    if (dbPos == m_databases.cend())
+    {
+        response->write(SimpleWeb::StatusCode::client_error_not_found);
+        return;
+    }
+
+    auto db = dbPos->second;
+
+    auto colPos = db->collections().find(collection);
+    if (colPos == db->collections().cend())
+    {
+        response->write(SimpleWeb::StatusCode::client_error_not_found);
+        return;
+    }
+
+    if (!colPos->second->hasIndex(name))
+    {
+        response->write(SimpleWeb::StatusCode::client_error_not_found);
+        return;
+    }
+
+    auto query = request->parse_query_string();
+    size_t skip = 0;
+    auto skipPos = query.find("skip");
+    if (skipPos != query.end())
+    {
+        skip = atoll(skipPos->second.c_str());
+        query.erase(skipPos);
+    }
+
+    size_t limit = 999;
+    auto limitPos = query.find("limit");
+    if (limitPos != query.end())
+    {
+        limit = atoll(limitPos->second.c_str());
+        query.erase(limitPos);
+    }
+
+    std::unordered_map<std::string, std::string> q;
+    for (auto& i : query)
+    {
+        q.insert(std::make_pair(i.first, i.second));
+    }
+
+    auto res = colPos->second->searchByIndex(name, q, limit, skip);
+    
+    boost::property_tree::ptree results;
+
+    boost::property_tree::ptree list;
+    for (auto& r : res)
+    {
+        list.push_back(std::make_pair("", r.data()));
+    }
+    results.add_child("items", list);
+
+    std::stringstream ss;
+    boost::property_tree::write_json(ss, results, true);
+    response->write(ss);
+}

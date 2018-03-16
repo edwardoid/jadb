@@ -1,6 +1,5 @@
 #include "jadb_http_server.h"
 #include "jadb_record.h"
-#include "jadb_http_url_builder.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <vector>
@@ -26,28 +25,34 @@ void HttpServer::setupEndpoints()
     };
 
     
-    UrlBuilder getCollectionsUrl;
-    getCollectionsUrl.string();
-    m_srv.resource[getCollectionsUrl.url()]["GET"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
-        m_api.getCollections(getCollectionsUrl, response, request);
+    m_getCollectionsUrl.string();
+    m_srv.resource[m_getCollectionsUrl.url()]["GET"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
+        m_api.getCollections(m_getCollectionsUrl, response, request);
     };
 
-    UrlBuilder getRecordUrl;
-    getRecordUrl.string().string().number();
-    m_srv.resource[getRecordUrl.url()]["GET"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
-        m_api.getRecord(getRecordUrl, response, request);
+    m_getRecordUrl.string().string().number();
+    m_srv.resource[m_getRecordUrl.url()]["GET"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
+        m_api.getRecord(m_getRecordUrl, response, request);
     };
 
-    UrlBuilder insertRecordUrl;
-    insertRecordUrl.string().string();
-    m_srv.resource[insertRecordUrl.url()]["PUT"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
-        m_api.insertRecord(insertRecordUrl, response, request);
+    m_insertRecordUrl.string().string();
+    m_srv.resource[m_insertRecordUrl.url()]["PUT"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
+        m_api.insertRecord(m_insertRecordUrl, response, request);
     };
 
-    UrlBuilder deleteRecordUrl;
-    deleteRecordUrl.string().string().number();
-    m_srv.resource[deleteRecordUrl.url()]["DEL"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
-        m_api.deleteRecord(deleteRecordUrl, response, request);
+    m_deleteRecordUrl.string().string().number();
+    m_srv.resource[m_deleteRecordUrl.url()]["DELETE"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
+        m_api.deleteRecord(m_deleteRecordUrl, response, request);
+    };
+
+    m_indexUrl.string().string().word("index").string();
+    m_srv.resource[m_indexUrl.url()]["PUT"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
+        m_api.createIndex(m_indexUrl, response, request);
+    };
+
+    m_searchByIndex.string().string().word("index").word("search").string();
+    m_srv.resource[m_searchByIndex.url()]["GET"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
+        m_api.searchByIndex(m_searchByIndex, response, request);
     };
 }
 

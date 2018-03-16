@@ -21,17 +21,68 @@ uint32_t Collection::recordsPerFile() const
     return m_mapper.buckets();
 }
 
+void Collection::createIndex(std::string name, std::vector<std::string> &fields)
+{
+    if (m_indices.find(name) != m_indices.end())
+    {
+        return;
+    }
+
+    auto path = indexFilePath(name);
+    auto index = std::make_shared<IndexFile>(path, name, fields);
+    m_indices.insert(std::make_pair(path.generic_string(), index));
+    for (auto& dt : m_data)
+    {
+        auto b = dt.second->begin();
+        auto e = dt.second->end();
+        while (b != e)
+        {
+            if(dt.second->checkSignature(Record::RecordSignature, b.absolutePos()))
+                index->add(*b);
+            ++b;
+        }
+    }
+}
+
+std::vector<Record> Collection::searchByIndex(std::string index, std::unordered_map<std::string, std::string>& filter, size_t limit, size_t skip)
+{
+    std::vector<Record> res;
+    auto idx = m_indices.find(indexFilePath(index).generic_string());
+    if (idx == m_indices.end())
+        return res;
+
+    boost::property_tree::ptree query;
+    for (auto q : filter)
+    {
+        query.put<std::string>(q.first, q.second);
+    }
+    auto ids = idx->second->get(query, skip, limit);
+    for (auto id : ids)
+    {
+        res.emplace_back(get(id));
+    }
+    return res;
+}
+
 DataFile& Collection::bucket(uint32_t bucket)
 {
     auto path = m_path;
     path.append(std::to_string(bucket));
-    auto fileIt = m_files.find(path.generic_string());
-    if (fileIt == m_files.end())
+    auto fileIt = m_data.find(path.generic_string());
+    if (fileIt == m_data.end())
     {
-        m_files.insert(std::make_pair(path.generic_string(), std::make_shared<DataFile>(path, shared_from_this())));
+        m_data.insert(std::make_pair(path.generic_string(), std::make_shared<DataFile>(path, shared_from_this())));
     }
 
-    return *(m_files.find(path.generic_string())->second.get());
+    return *(m_data.find(path.generic_string())->second.get());
+}
+
+boost::filesystem::path Collection::indexFilePath(const std::string& name) const
+{
+    auto path = m_path;
+    path.append("idx");
+    path.append(name);
+    return path;
 }
 
 std::string Collection::name() const
@@ -49,6 +100,11 @@ void Collection::unlock()
     m_mx.unlock();
 }
 
+bool Collection::hasIndex(const std::string& name) const
+{
+    return m_indices.find(indexFilePath(name).generic_string()) != m_indices.end();
+}
+
 uint64_t Collection::insert(Record& record)
 {
     if (record.id() == 0)
@@ -58,6 +114,10 @@ uint64_t Collection::insert(Record& record)
     auto& file = bucket(pos.Bucket);
     auto it = (file.begin() + pos.Offset);
     it = record;
+    for (auto& idx : m_indices)
+    {
+        idx.second->add(record);
+    }
     return record.id();
 }
 

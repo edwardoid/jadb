@@ -4,6 +4,18 @@
 
 using namespace jadb;
 
+
+UrlBuilder::UrlBuilder(const UrlBuilder& src)
+{
+    *this = src;
+}
+
+const UrlBuilder& UrlBuilder::operator=(const UrlBuilder& src)
+{
+    m_componenets = src.m_componenets;
+    return *this;
+}
+
 UrlBuilder& UrlBuilder::number()
 {
     m_componenets.push_back("([\\d]+)");

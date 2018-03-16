@@ -74,7 +74,7 @@ namespace jadb
         { return Iterator(*this, 0); }
         
         Iterator end()
-        { return Iterator(*this, std::ceil((double)m_file->size() / (double)m_portion + 1.)); }
+        { return Iterator(*this, std::ceil((double)(m_file->size() - m_offset) / (double)m_portion)); }
     protected:
         friend class Iterator;
         std::shared_ptr<File> m_file;

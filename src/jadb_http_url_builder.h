@@ -11,6 +11,8 @@ namespace jadb
     public:
         UrlBuilder() = default;
         ~UrlBuilder() = default;
+        UrlBuilder(const UrlBuilder& src);
+        const UrlBuilder& operator = (const UrlBuilder& src);
 
         UrlBuilder& string();
         UrlBuilder& word(std::string work);

@@ -43,6 +43,17 @@ std::ostream& Record::view(std::ostream& os)
     return os;
 }
 
+std::string Record::operator[] (const char* prop) const
+{
+    return (*this)[std::string(prop)];
+}
+
+std::string Record::operator[] (const std::string& prop) const
+{
+    static std::string NoVal;
+    return m_data.get<std::string>(prop, NoVal);
+}
+
 void Record::setData(boost::property_tree::ptree props)
 {
     if (props.get<uint64_t>("__id", 0) == 0)
@@ -53,7 +64,7 @@ void Record::setData(boost::property_tree::ptree props)
     m_data = props;
 }
 
-uint64_t Record::id()
+uint64_t Record::id() const
 {
     return m_data.get<uint64_t>("__id", 0);
 }

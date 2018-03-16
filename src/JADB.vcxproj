@@ -27,8 +27,12 @@
     <ClCompile Include="jadb_header.cpp" />
     <ClCompile Include="jadb_http_server.cpp" />
     <ClCompile Include="jadb_http_url_builder.cpp" />
+    <ClCompile Include="jadb_index.cpp" />
+    <ClCompile Include="jadb_index_file.cpp" />
     <ClCompile Include="jadb_logger.cpp" />
     <ClCompile Include="jadb_record.cpp" />
+    <ClCompile Include="jadb_rest_endpoints.cpp" />
+    <ClCompile Include="jadb_utils.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="jadb_serizalization.cpp" />
   </ItemGroup>
@@ -42,13 +46,16 @@
     <ClInclude Include="jadb_header.h" />
     <ClInclude Include="jadb_http_server.h" />
     <ClInclude Include="jadb_http_url_builder.h" />
+    <ClInclude Include="jadb_index.h" />
     <ClInclude Include="jadb_index_file.h" />
     <ClInclude Include="jadb_iterative_file.h" />
     <ClInclude Include="jadb_logger.h" />
     <ClInclude Include="jadb_mapper.h" />
     <ClInclude Include="jadb_record.h" />
+    <ClInclude Include="jadb_rest_endpoints.h" />
     <ClInclude Include="jadb_serialization.h" />
     <ClInclude Include="jadb_signed.h" />
+    <ClInclude Include="jadb_utils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
