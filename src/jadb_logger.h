@@ -21,6 +21,10 @@ namespace jadb
             ~Message() { end(); }
             void end();
         protected:
+            void ident(uint8_t count);
+            friend class Logger;
+        protected:
+            size_t m_identCount = 0;
             Logger& m_instance;
             std::string m_level;
             std::stringstream m_ss;
@@ -40,9 +44,9 @@ namespace jadb
             Debug(const Debug& debug);
         };
 
-        static Message msg();
-        static Error err();
-        static Debug dbg();
+        static Message msg(uint8_t ident = 0);
+        static Error err(uint8_t ident = 0);
+        static Debug dbg(uint8_t ident = 0);
 
     protected:
         static Logger& log();

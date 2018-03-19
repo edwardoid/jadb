@@ -33,19 +33,19 @@ Collection::Collection(std::string name, boost::filesystem::path path, class Dat
     {
         auto p = m_indicesDir;
         p.append(i);
-        Logger::msg() << "Loaded index file " << p.generic_string() << " for collection " << m_name;
+        Logger::msg(1) << "Loaded index file " << p.generic_string() << " for collection " << m_name;
         m_indices.insert(std::make_pair(p.generic_string(), std::make_shared<IndexFile>(p)));
     }
 
     for (auto& i : data)
     {
-        Logger::msg() << "Loaded data file " << i << " for collection " << m_name;
+        Logger::msg(1) << "Loaded data file " << i << " for collection " << m_name;
         m_data.insert(std::make_pair(i, std::make_shared<DataFile>(i, this)));
     }
     file->unlock();
 
     Syncronizer::SyncronizationTask task([&]() {
-        Logger::msg() << "Syncronizing collection " << m_name;
+        Logger::msg(2) << "Syncronizing collection " << m_name;
         std::lock_guard<std::recursive_mutex> guard(m_mx);
         std::vector<std::string> data;
         std::vector<std::string> indices;
@@ -67,7 +67,7 @@ Collection::Collection(std::string name, boost::filesystem::path path, class Dat
         file->flush();
         file->close();
         file->unlock();
-        Logger::msg() << "Syncronization of collection " << m_name << " done";
+        Logger::msg(2) << "Syncronization of collection " << m_name << " done";
     });
 
     Syncronizer::addOperation(task);

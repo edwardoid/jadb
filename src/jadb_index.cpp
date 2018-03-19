@@ -21,7 +21,7 @@ uint32_t Index::operator() (const Record& rec) const
     }
 
     auto str = ss.str();
-    return hash(reinterpret_cast<const unsigned char*>(str.c_str()), str.size());
+    return hash(reinterpret_cast<const unsigned char*>(str.c_str()), static_cast<uint32_t>(str.size()));
 }
 
 uint32_t Index::operator() (const boost::property_tree::ptree& tree) const
