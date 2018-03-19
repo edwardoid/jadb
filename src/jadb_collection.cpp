@@ -3,6 +3,7 @@
 #include "jadb.h"
 #include "jadb_filesystem.h"
 #include "jadb_syncronizer.h"
+#include "jadb_stats.h"
 #include <memory>
 #include <vector>
 
@@ -27,8 +28,12 @@ Collection::Collection(std::string name, boost::filesystem::path path, class Dat
     file->close();
     file->open(std::ios::in | std::ios::binary);
     file->lock();
+    uint32_t nextId = 0;
+    Serialization(file).deserialize(nextId);
+    m_ids.store(nextId);
     ArraySerialization(file).deserialize<std::string>(indices);
     ArraySerialization(file).deserialize<std::string>(data);
+
     for (auto& i : indices)
     {
         auto p = m_indicesDir;
@@ -39,8 +44,10 @@ Collection::Collection(std::string name, boost::filesystem::path path, class Dat
 
     for (auto& i : data)
     {
-        Logger::msg(1) << "Loaded data file " << i << " for collection " << m_name;
-        m_data.insert(std::make_pair(i, std::make_shared<DataFile>(i, this)));
+        auto file = std::make_shared<DataFile>(i, this);
+
+        Logger::msg(1) << "Loaded data file " << i << " for collection " << m_name << " (" << file->header().rows() << " rows";
+        m_data.insert(std::make_pair(i, file));
     }
     file->unlock();
 
@@ -62,6 +69,7 @@ Collection::Collection(std::string name, boost::filesystem::path path, class Dat
         file->lock();
         file->open(std::ios::out | std::ios::binary | std::ios::trunc);
 
+        Serialization(file).serialize(m_ids.load());
         ArraySerialization(file).serialize<std::string>(indices);
         ArraySerialization(file).serialize<std::string>(data);
         file->flush();
@@ -75,7 +83,6 @@ Collection::Collection(std::string name, boost::filesystem::path path, class Dat
 
 Collection::~Collection()
 {
-    
 }
 
 uint32_t Collection::recordsPerFile() const
@@ -85,6 +92,7 @@ uint32_t Collection::recordsPerFile() const
 
 void Collection::createIndex(std::string name, std::vector<std::string> &fields)
 {
+    OperationDuration dur(Statistics::Type::IndexCreation);
     if (m_indices.find(name) != m_indices.end())
     {
         return;
@@ -108,6 +116,7 @@ void Collection::createIndex(std::string name, std::vector<std::string> &fields)
 
 std::vector<Record> Collection::searchByIndex(std::string index, std::unordered_map<std::string, std::string>& filter, size_t limit, size_t skip)
 {
+    OperationDuration dur(Statistics::Type::SearchByIndex);
     std::vector<Record> res;
     auto idx = m_indices.find(indexFilePath(index).generic_string());
     if (idx == m_indices.end())
@@ -168,13 +177,15 @@ bool Collection::hasIndex(const std::string& name) const
 
 uint64_t Collection::insert(Record& record)
 {
+    OperationDuration dur(Statistics::Type::Insert);
     if (record.id() == 0)
-        record.generateId();
+        record.setId(m_ids.fetch_add(1));
     Logger::msg() << "Inseting new entry into " << m_name << " id = " << (int)record.id();
     auto pos = m_mapper[record.id()];
     auto& file = bucket(pos.Bucket);
     auto it = (file.begin() + pos.Offset);
     it = record;
+    file.recordAdded();
     for (auto& idx : m_indices)
     {
         idx.second->add(record);
@@ -184,6 +195,7 @@ uint64_t Collection::insert(Record& record)
 
 void Collection::remove(uint64_t id)
 {
+    OperationDuration dur(Statistics::Type::Remove);
     Logger::msg() << "Removing entry id = " << (int)id;
     auto pos = m_mapper[id];
     auto& file = bucket(pos.Bucket);
@@ -193,6 +205,7 @@ void Collection::remove(uint64_t id)
 
 bool Collection::contains(uint64_t id)
 {
+    OperationDuration dur(Statistics::Type::GetById);
     auto pos = m_mapper[id];
     auto& file = bucket(pos.Bucket);
     auto it = (file.begin() + pos.Offset);
@@ -201,6 +214,7 @@ bool Collection::contains(uint64_t id)
 
 Record Collection::get(uint64_t id)
 {
+    OperationDuration dur(Statistics::Type::GetById);
     auto pos = m_mapper[id];
 
     auto& file = bucket(pos.Bucket);

@@ -2,9 +2,13 @@
 #include "jadb_logger.h"
 #include "jadb_serialization.h"
 
+#define BYTE(X) (X)
+#define KBYTE(X) BYTE(1000 * (X))
+#define MBYTE(X) KBYTE(1000 * (X))
+
 using namespace jadb;
 const uint32_t Record::RecordSignature = RECORD_SIGNATURE;
-const uint32_t Record::MaxRecordSize = 5000000; // 5MB
+const uint32_t Record::MaxRecordSize = MBYTE(1); // 500KB
 
 
 std::atomic<uint64_t> Record::NextId(1);
@@ -56,7 +60,7 @@ std::string Record::operator[] (const std::string& prop) const
 
 void Record::setData(boost::property_tree::ptree props)
 {
-    if (props.get<uint64_t>("__id", 0) == 0)
+    if (props.get<uint64_t>("__id", -1) == 0)
     {
         props.put<uint64_t>("__id", NextId.fetch_add(1));
     }

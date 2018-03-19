@@ -41,6 +41,7 @@ namespace jadb
         boost::filesystem::path m_path;
         boost::filesystem::path m_dataDir;
         boost::filesystem::path m_indicesDir;
+        std::atomic<uint32_t> m_ids;
         class Database* m_db;
         std::recursive_mutex m_mx;
         std::unordered_map < std::string, std::shared_ptr<DataFile>> m_data;

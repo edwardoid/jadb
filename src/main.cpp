@@ -26,10 +26,6 @@ void test()
 #else
     auto db = std::make_shared<jadb::Database>("D:\\db");
 #endif // __linux
-    jadb::Record entry(JSON_DATA);
-    db->create("users").insert(entry);
-    db->create("users").get(1);
-    assert(db->create("users").contains(1));
     
     db->create("admins");
     db->create("logs");

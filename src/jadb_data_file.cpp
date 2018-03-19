@@ -10,6 +10,7 @@ using namespace jadb;
 DataFile::DataFile(const boost::filesystem::path& path, Collection* collection)
     : IterativeFile(FileSystem::Get(path), SizeInfo<Header>::size()), m_path(path)
 {
+    OperationDuration op(Statistics::Type::FileIO);
     bool isNew = !boost::filesystem::exists(path);
 
     m_file = FileSystem::Get(path);
@@ -56,6 +57,7 @@ void DataFile::recordRemoved()
 
 void DataFile::flush()
 {
+    OperationDuration op(Statistics::Type::FileIO);
     m_file->flush();
 }
 

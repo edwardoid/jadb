@@ -6,6 +6,7 @@
 #include "jadb_serialization.h"
 #include "jadb_iterative_file.h"
 #include "jadb_record.h"
+#include "jadb_stats.h"
 
 #include <memory>
 #include <string>
@@ -30,9 +31,7 @@ namespace jadb
         template<class T>
         void write(const T& obj, std::streampos offset)
         {
-            {
-            Logger::msg() << "Writing at " << (int)(offset);
-            }
+            OperationDuration op(Statistics::Type::FileIO);
             File::Lock lock(*m_file);
             m_file->seekForWrite(offset);
             Serialization oa(m_file);
@@ -43,9 +42,7 @@ namespace jadb
         template<class T>
         void read(T& obj, std::streampos offset)
         {
-            {
-            Logger::msg() << "Reading at " << (int)(offset);
-            }
+            OperationDuration op(Statistics::Type::FileIO);
             m_file->seekForRead(offset);
             Serialization oa(m_file);
             oa.deserialize(obj);

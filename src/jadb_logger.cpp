@@ -44,6 +44,8 @@ Logger::Message::Message(Logger& instance, std::string level)
 {}
 
 Logger::Message& Logger::Message:: operator << (const int& val) { m_ss << val; return *this; }
+Logger::Message& Logger::Message:: operator << (const uint32_t& val) { m_ss << val; return *this; }
+Logger::Message& Logger::Message:: operator << (const size_t& val) { m_ss << val; return *this; }
 Logger::Message& Logger::Message:: operator << (const double& val) { m_ss << val; return *this; }
 Logger::Message& Logger::Message:: operator << (const std::string& msg) { m_ss << msg; return *this; }
 

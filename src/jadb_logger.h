@@ -16,6 +16,8 @@ namespace jadb
             Message(Logger& src, std::string level = "MSG");
             Message(const Message& src);
             Message& operator << (const int& val);
+            Message& operator << (const uint32_t& val);
+            Message& operator << (const size_t& val);
             Message& operator << (const double& val);
             Message& operator << (const std::string& msg);
             ~Message() { end(); }

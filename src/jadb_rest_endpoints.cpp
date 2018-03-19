@@ -306,6 +306,7 @@ void RESTApi::searchByIndex(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Res
         list.push_back(std::make_pair("", r.data()));
     }
     results.add_child("items", list);
+    results.put<int>("count", res.size());
 
     std::stringstream ss;
     boost::property_tree::write_json(ss, results, true);

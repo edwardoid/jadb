@@ -2,6 +2,7 @@
 #include "jadb_serialization.h"
 #include "jadb_iterative_file.h"
 #include "jadb_filesystem.h"
+#include "jadb_stats.h"
 
 namespace jadb
 {
@@ -38,6 +39,7 @@ using namespace jadb;
 IndexFile::IndexFile(const boost::filesystem::path& path)
     : m_file(FileSystem::Get(path))
 {
+    OperationDuration op(Statistics::Type::FileIO);
     m_file->close();
     m_file->open(std::ios::in | std::ios::binary);
     Serialization oa(m_file);
@@ -52,6 +54,7 @@ IndexFile::IndexFile(const boost::filesystem::path& path)
 IndexFile::IndexFile(const boost::filesystem::path& path, std::string name, std::vector<std::string>& fields)
     : m_file(FileSystem::Get(path)), m_name(name), m_index(fields)
 {
+    OperationDuration op(Statistics::Type::FileIO);
     m_file->close();
     m_file->open(std::ios::out | std::ios::trunc | std::ios::binary);
     Serialization ia(m_file);
@@ -64,6 +67,7 @@ IndexFile::IndexFile(const boost::filesystem::path& path, std::string name, std:
 
 void IndexFile::add(const Record& rec)
 {
+    OperationDuration op(Statistics::Type::IndexUpdate);
     Entry e;
     e.Value = m_index(rec);
     if (e.Value == m_index.CantCreateIndex)
@@ -77,6 +81,7 @@ void IndexFile::add(const Record& rec)
 
 std::vector<uint64_t> IndexFile::get(boost::property_tree::ptree& tree, size_t skip, size_t limit)
 {
+    OperationDuration op(Statistics::Type::SearchByIndex);
     std::vector<uint64_t> ids;
     auto filter = m_index(tree);
 
@@ -87,8 +92,14 @@ std::vector<uint64_t> IndexFile::get(boost::property_tree::ptree& tree, size_t s
     IterativeFile<Entry> file(m_file, m_headerEnd);
     auto b = file.begin();
     auto e = file.end();
-    while (skip-- && b != e)
+    while (skip > 0 && b != e)
     {
+        auto elem = *b;
+        if (elem.Value == filter)
+        {
+            skip--;
+        }
+
         ++b;
     }
 
@@ -105,6 +116,7 @@ std::vector<uint64_t> IndexFile::get(boost::property_tree::ptree& tree, size_t s
 
 IndexFile::~IndexFile()
 {
+    OperationDuration op(Statistics::Type::FileIO);
     m_file->flush();
 }
 
