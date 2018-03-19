@@ -20,7 +20,7 @@ namespace jadb
     class DataFile: public IterativeFile<Record>
     {
     public:
-        DataFile(const boost::filesystem::path& path, std::shared_ptr<class Collection> collection);
+        DataFile(const boost::filesystem::path& path, class Collection* collection);
         ~DataFile();
         const Header& header() const;
         void recordAdded();
@@ -62,7 +62,6 @@ namespace jadb
 
         friend class Collection;
     private:
-        std::shared_ptr<class Collection> m_collection;
         boost::filesystem::path m_path;
         Header m_header;
         std::shared_ptr<File> m_file;

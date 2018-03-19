@@ -25,6 +25,8 @@ namespace jadb
         const Index& index() const { return m_index; }
         const std::string& name() const { return m_name; }
     private:
+        void save();
+    private:
         std::shared_ptr<File> m_file;
         std::string m_name;
         size_t m_headerEnd;

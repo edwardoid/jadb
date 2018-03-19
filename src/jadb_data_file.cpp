@@ -7,8 +7,8 @@
 #include "jadb_iterative_file.h"
 using namespace jadb;
 
-DataFile::DataFile(const boost::filesystem::path& path, std::shared_ptr<Collection> collection)
-    : IterativeFile(FileSystem::Get(path), SizeInfo<Header>::size()), m_collection(collection), m_path(path)
+DataFile::DataFile(const boost::filesystem::path& path, Collection* collection)
+    : IterativeFile(FileSystem::Get(path), SizeInfo<Header>::size()), m_path(path)
 {
     bool isNew = !boost::filesystem::exists(path);
 
@@ -24,7 +24,7 @@ DataFile::DataFile(const boost::filesystem::path& path, std::shared_ptr<Collecti
         
         char* empty = new char[Record::MaxRecordSize];
         memset(empty, 0, Record::MaxRecordSize);
-        for(uint32_t i = 0; i < m_collection->recordsPerFile(); ++i)
+        for(uint32_t i = 0; i < collection->recordsPerFile(); ++i)
         {
             m_file->write(empty, Record::MaxRecordSize);
             m_file->flush();

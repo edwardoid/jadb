@@ -38,17 +38,22 @@ using namespace jadb;
 IndexFile::IndexFile(const boost::filesystem::path& path)
     : m_file(FileSystem::Get(path))
 {
+    m_file->close();
+    m_file->open(std::ios::in | std::ios::binary);
     Serialization oa(m_file);
     oa.deserialize(m_name);
     oa.deserialize(m_index);
     m_headerEnd = m_file->readPosition();
+    m_headerEnd = m_file->writePosition();
+    m_file->close();
+    m_file->open();
 }
 
 IndexFile::IndexFile(const boost::filesystem::path& path, std::string name, std::vector<std::string>& fields)
     : m_file(FileSystem::Get(path)), m_name(name), m_index(fields)
 {
     m_file->close();
-    m_file->open(std::ios::in | std::ios::out | std::ios::app | std::ios::binary);
+    m_file->open(std::ios::out | std::ios::trunc | std::ios::binary);
     Serialization ia(m_file);
     ia.serialize(m_name);
     ia.serialize(m_index);
@@ -101,4 +106,9 @@ std::vector<uint64_t> IndexFile::get(boost::property_tree::ptree& tree, size_t s
 IndexFile::~IndexFile()
 {
     m_file->flush();
+}
+
+void IndexFile::save()
+{
+
 }

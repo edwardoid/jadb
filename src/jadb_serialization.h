@@ -4,6 +4,9 @@
 #include "jadb_file.h"
 #include <memory>
 #include <vector>
+#include <list>
+#include <map>
+#include <unordered_map>
 
 namespace jadb
 {
@@ -25,7 +28,9 @@ namespace jadb
         {
             m_stream->read(reinterpret_cast<char*>(&obj), sizeof(obj));
         }
-    private:
+    protected:
+        class MapSerializer;
+        class Array;
         std::shared_ptr<File> m_stream;
     };
 
@@ -49,6 +54,103 @@ namespace jadb
             m_stream->read(const_cast<char*>(obj.data()), sz);
         }
     }
+
+    class MapSerialization
+    {
+    public:
+        MapSerialization(std::shared_ptr<File> stream)
+            : m_stream(stream)
+        {}
+        ~MapSerialization() = default;
+
+        template<typename K, typename V, class Container = std::map<K, V>, class KeySerializer = Serialization, class ValueSerilizer = Serialization>
+        void serialize(const Container& obj)
+        {
+            const uint32_t sz = static_cast<uint32_t>(obj.size());
+            Serialization(m_stream).serialize<uint32_t>(sz);
+            for (auto& kp : obj)
+            {
+                KeySerializer(m_stream).serialize<K>(kp.first);
+                ValueSerilizer(m_stream).serialize<V>(kp.second);
+            }
+        }
+
+        template<typename K, typename V, class Container = std::map<K, V>, class KeySerializer = Serialization, class ValueSerilizer = Serialization>
+        void deserialize(Container& obj)
+        {
+            uint32_t sz = 0;
+            Serialization(m_stream).deserialize<uint32_t>(sz);
+            while (sz--)
+            {
+                K key;
+                V value;
+                KeySerializer(m_stream).deserialize<K>(key);
+                ValueSerilizer(m_stream).deserialize<V>(value);
+                obj.insert(std::make_pair(key, value));
+            }
+        }
+    protected:
+        std::shared_ptr<File> m_stream;
+    };
+
+    class ArraySerialization
+    {
+    public:
+        ArraySerialization(std::shared_ptr<File> stream)
+            : m_stream(stream)
+        {}
+        ~ArraySerialization() = default;
+
+        template<typename V, class Container = std::vector<V>>
+        void serialize(const Container& obj)
+        {
+            const uint32_t sz = static_cast<uint32_t>(obj.size());
+            Serialization(m_stream).serialize<uint32_t>(sz);
+            for (auto& val : obj)
+            {
+                Serialization(m_stream).serialize<V>(val);
+            }
+        }
+
+        template<typename V, class Container = std::vector<V>>
+        void deserialize(Container& obj)
+        {
+            uint32_t sz = 0;
+            Serialization(m_stream).deserialize<uint32_t>(sz);
+            while (sz--)
+            {
+                V value;
+                Serialization(m_stream).deserialize<V>(value);
+                obj.push_back(value);
+            }
+        }
+    protected:
+        std::shared_ptr<File> m_stream;
+    };
+
+    template<typename Type>
+    class SmartPointerSerialization
+    {
+    public:
+        SmartPointerSerialization(std::shared_ptr<File> stream)
+            : m_stream(stream)
+        {}
+        ~SmartPointerSerialization() = default;
+
+        template<typename Pointer = std::shared_ptr<Type>>
+        void serialize(const Pointer& obj)
+        {
+            Serialization(m_stream).serialize<Type>(*(obj.get()));
+        }
+
+        template<typename Pointer = std::shared_ptr<Type>>
+        void deserialize(Pointer& obj)
+        {
+            Serialization(m_stream).deserialize<Type>(*(obj.get()));
+        }
+    protected:
+        std::shared_ptr<File> m_stream;
+    };
 }
 
 #endif // JADB_SERIALIZATION_H

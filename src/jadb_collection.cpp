@@ -1,19 +1,81 @@
 #include "jadb_collection.h"
 #include "jadb_logger.h"
 #include "jadb.h"
+#include "jadb_filesystem.h"
+#include "jadb_syncronizer.h"
 #include <memory>
+#include <vector>
 
 #define MAX_RECORD_LENGTH (512 * 1024)
 
 using namespace jadb;
 
 Collection::Collection(std::string name, boost::filesystem::path path, class Database* db)
-    : m_name(name), m_path(path), m_db(db)
+    : m_name(name), m_path(path), m_dataDir(path), m_indicesDir(path), m_db(db)
 {
+    m_dataDir.append("data");
+    m_indicesDir.append("idx");
+    m_path.append(name);
+
+    boost::filesystem::create_directories(m_dataDir);
+    boost::filesystem::create_directories(m_indicesDir);
+    
+    std::vector<std::string> data;
+    std::vector<std::string> indices;
+
+    auto file = FileSystem::Get(m_path);
+    file->close();
+    file->open(std::ios::in | std::ios::binary);
+    file->lock();
+    ArraySerialization(file).deserialize<std::string>(indices);
+    ArraySerialization(file).deserialize<std::string>(data);
+    for (auto& i : indices)
+    {
+        auto p = m_indicesDir;
+        p.append(i);
+        Logger::msg() << "Loaded index file " << p.generic_string() << " for collection " << m_name;
+        m_indices.insert(std::make_pair(p.generic_string(), std::make_shared<IndexFile>(p)));
+    }
+
+    for (auto& i : data)
+    {
+        Logger::msg() << "Loaded data file " << i << " for collection " << m_name;
+        m_data.insert(std::make_pair(i, std::make_shared<DataFile>(i, this)));
+    }
+    file->unlock();
+
+    Syncronizer::SyncronizationTask task([&]() {
+        Logger::msg() << "Syncronizing collection " << m_name;
+        std::lock_guard<std::recursive_mutex> guard(m_mx);
+        std::vector<std::string> data;
+        std::vector<std::string> indices;
+        std::for_each(m_indices.begin(), m_indices.end(), [&](auto& p) {
+            indices.push_back(p.second->name());
+        });
+
+        data.reserve(m_data.size());
+        std::for_each(m_data.begin(), m_data.end(), [&](auto& p) {
+            data.push_back(p.first);
+        });
+
+        auto file = FileSystem::Get(m_path);
+        file->lock();
+        file->open(std::ios::out | std::ios::binary | std::ios::trunc);
+
+        ArraySerialization(file).serialize<std::string>(indices);
+        ArraySerialization(file).serialize<std::string>(data);
+        file->flush();
+        file->close();
+        file->unlock();
+        Logger::msg() << "Syncronization of collection " << m_name << " done";
+    });
+
+    Syncronizer::addOperation(task);
 }
 
 Collection::~Collection()
 {
+    
 }
 
 uint32_t Collection::recordsPerFile() const
@@ -66,12 +128,12 @@ std::vector<Record> Collection::searchByIndex(std::string index, std::unordered_
 
 DataFile& Collection::bucket(uint32_t bucket)
 {
-    auto path = m_path;
+    auto path = m_dataDir;
     path.append(std::to_string(bucket));
     auto fileIt = m_data.find(path.generic_string());
     if (fileIt == m_data.end())
     {
-        m_data.insert(std::make_pair(path.generic_string(), std::make_shared<DataFile>(path, shared_from_this())));
+        m_data.insert(std::make_pair(path.generic_string(), std::make_shared<DataFile>(path, this)));
     }
 
     return *(m_data.find(path.generic_string())->second.get());
@@ -79,8 +141,7 @@ DataFile& Collection::bucket(uint32_t bucket)
 
 boost::filesystem::path Collection::indexFilePath(const std::string& name) const
 {
-    auto path = m_path;
-    path.append("idx");
+    auto path = m_indicesDir;
     path.append(name);
     return path;
 }

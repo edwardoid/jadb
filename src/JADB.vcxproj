@@ -32,6 +32,7 @@
     <ClCompile Include="jadb_logger.cpp" />
     <ClCompile Include="jadb_record.cpp" />
     <ClCompile Include="jadb_rest_endpoints.cpp" />
+    <ClCompile Include="jadb_syncronizer.cpp" />
     <ClCompile Include="jadb_utils.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="jadb_serizalization.cpp" />
@@ -43,6 +44,7 @@
     <ClInclude Include="jadb_file.h" />
     <ClInclude Include="jadb_files.h" />
     <ClInclude Include="jadb_filesystem.h" />
+    <ClInclude Include="jadb_file_reference.h" />
     <ClInclude Include="jadb_header.h" />
     <ClInclude Include="jadb_http_server.h" />
     <ClInclude Include="jadb_http_url_builder.h" />
@@ -55,6 +57,7 @@
     <ClInclude Include="jadb_rest_endpoints.h" />
     <ClInclude Include="jadb_serialization.h" />
     <ClInclude Include="jadb_signed.h" />
+    <ClInclude Include="jadb_syncronizer.h" />
     <ClInclude Include="jadb_utils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

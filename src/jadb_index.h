@@ -25,7 +25,7 @@ namespace jadb
     inline void Serialization::serialize<Index>(const Index& obj)
     {
         auto& fields = obj.fields();
-        uint32_t len = fields.size();
+        uint32_t len = static_cast<uint32_t>(fields.size());
         Serialization::serialize(len);
         for (auto& f : fields)
             Serialization::serialize(f);
@@ -42,7 +42,7 @@ namespace jadb
         {
             std::string f;
             Serialization::deserialize(f);
-            if (f.size())
+            if (f.empty())
                 continue;
             obj.m_fields.push_back(f);
         }
