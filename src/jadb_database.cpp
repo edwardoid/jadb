@@ -1,18 +1,19 @@
-#include "jadb.h"
+#include "jadb_database.h"
 #include "jadb_logger.h"
-
+#include "jadb_configuration.h"
 
 using namespace jadb;
 
 
-Database::Database(std::string root)
-    : m_path(root)
+Database::Database(std::string name)
 {
-    m_path = boost::filesystem::canonical(m_path);
-    boost::filesystem::directory_iterator it(root), end;
+    m_path = boost::filesystem::canonical(Configuration::root());
+    m_path.append(name);
+    boost::filesystem::create_directories(m_path);
+    boost::filesystem::directory_iterator it(m_path), end;
     {
         auto msg = Logger::msg();
-        msg << "Looking for colelctions in " << m_path.generic_string();
+        msg << "Looking for collections in " << m_path.generic_string();
     }
     for (; it != end; ++it)
     {

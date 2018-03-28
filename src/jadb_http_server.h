@@ -2,7 +2,7 @@
 #define JADB_HTTP_SERVER_H
 
 #include "sws/server_http.hpp"
-#include "jadb.h"
+#include "jadb_database.h"
 #include "jadb_rest_endpoints.h"
 #include "jadb_http_url_builder.h"
 #include <string>
@@ -22,7 +22,9 @@ namespace jadb
         void setupEndpoints();
     private:
         RESTApi m_api;
+        UrlBuilder m_createDatabaseUrl;
         UrlBuilder m_getCollectionsUrl;
+        UrlBuilder m_createCollectionUrl;
         UrlBuilder m_getRecordUrl;
         UrlBuilder m_insertRecordUrl;
         UrlBuilder m_deleteRecordUrl;

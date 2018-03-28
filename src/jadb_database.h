@@ -1,5 +1,5 @@
-#ifndef JADB_H
-#define JADB_H
+#ifndef JADB_DATABASE_H
+#define JADB_DATABASE_H
 
 #include<string>
 #include<memory>
@@ -14,7 +14,7 @@ namespace jadb
     class Database
     {
     public:
-        Database(std::string root = ".");
+        Database(std::string name);
         ~Database();
         std::unordered_map<std::string, std::shared_ptr<Collection>>& collections();
         Collection& operator[] (const std::string name);
@@ -26,4 +26,4 @@ namespace jadb
     };
 }
 
-#endif // JADB_H
+#endif // JADB_DATABASE_H

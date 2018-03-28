@@ -1,6 +1,6 @@
 #include "jadb_collection.h"
 #include "jadb_logger.h"
-#include "jadb.h"
+#include "jadb_database.h"
 #include "jadb_filesystem.h"
 #include "jadb_syncronizer.h"
 #include "jadb_stats.h"

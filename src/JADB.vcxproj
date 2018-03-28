@@ -20,7 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="jadb_collection.cpp" />
-    <ClCompile Include="jadb.cpp" />
+    <ClCompile Include="jadb_database.cpp" />
+    <ClCompile Include="jadb_configuration.cpp" />
     <ClCompile Include="jadb_data_file.cpp" />
     <ClCompile Include="jadb_file.cpp" />
     <ClCompile Include="jadb_filesystem.cpp" />
@@ -40,7 +41,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="jadb_collection.h" />
-    <ClInclude Include="jadb.h" />
+    <ClInclude Include="jadb_database.h" />
+    <ClInclude Include="jadb_configuration.h" />
     <ClInclude Include="jadb_data_file.h" />
     <ClInclude Include="jadb_file.h" />
     <ClInclude Include="jadb_files.h" />
@@ -138,7 +140,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\..\3dp;$(SolutionDir)\..\src;D:\boost_1_66_0</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>D:\boost\boost\bin.v2\libs\regex\build\msvc-14.1\debug\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\date_time\build\msvc-14.1\debug\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\system\build\msvc-14.1\debug\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\filesystem\build\msvc-14.1\debug\address-model-64\link-static\threadapi-win32\threading-multi;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\boost\boost\bin.v2\libs\regex\build\msvc-14.1\debug\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\date_time\build\msvc-14.1\debug\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\system\build\msvc-14.1\debug\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\filesystem\build\msvc-14.1\debug\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\program_options\build\msvc-14.1\debug\address-model-64\link-static\threadapi-win32\threading-multi;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -168,7 +170,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>D:\boost\boost\bin.v2\libs\regex\build\msvc-14.1\release\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\date_time\build\msvc-14.1\release\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\system\build\msvc-14.1\release\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\filesystem\build\msvc-14.1\release\address-model-64\link-static\threadapi-win32\threading-multi;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\boost\boost\bin.v2\libs\regex\build\msvc-14.1\release\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\date_time\build\msvc-14.1\release\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\system\build\msvc-14.1\release\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\filesystem\build\msvc-14.1\release\address-model-64\link-static\threadapi-win32\threading-multi;D:\boost\boost\bin.v2\libs\program_options\build\msvc-14.1\release\address-model-64\link-static\threadapi-win32\threading-multi;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

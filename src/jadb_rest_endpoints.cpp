@@ -28,6 +28,25 @@ void RESTApi::getDatabasesList(std::shared_ptr<HttpServerImpl::Response> respons
     response->write(ss);
 }
 
+void RESTApi::createDatabase(UrlBuilder & url, std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request)
+{
+    auto urlRaw = request->path_match[0].str();
+    auto tokens = url.parse(urlRaw);
+    auto name = tokens[1];
+
+    if (m_databases.find(name) != m_databases.end())
+    {
+        response->write(SimpleWeb::StatusCode::client_error_conflict);
+        return;
+    }
+    
+    auto db = std::make_shared<jadb::Database>(name);
+
+
+    m_databases.insert(std::make_pair(name, db));
+    response->write(SimpleWeb::StatusCode::success_created);
+}
+
 void RESTApi::getCollections(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request)
 {
     auto urlRaw = request->path_match[0].str();
@@ -57,6 +76,30 @@ void RESTApi::getCollections(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Re
     std::stringstream ss;
     boost::property_tree::write_json(ss, collections, true);
     response->write(ss);
+}
+
+void RESTApi::createCollection(UrlBuilder & url, std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request)
+{
+    auto urlRaw = request->path_match[0].str();
+    auto tokens = url.parse(urlRaw);
+    auto db = tokens[1];
+    auto name = tokens[2];
+
+    auto database = m_databases.find(db);
+    if (database == m_databases.end())
+    {
+        response->write(SimpleWeb::StatusCode::client_error_not_found);
+        return;
+    }
+    if(database->second->has(name))
+    {
+        response->write(SimpleWeb::StatusCode::client_error_conflict);
+        return;
+    }
+    
+    database->second->create(name);
+
+    response->write(SimpleWeb::StatusCode::success_created);
 }
 
 void RESTApi::getRecord(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request)

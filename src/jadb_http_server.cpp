@@ -24,10 +24,19 @@ void HttpServer::setupEndpoints()
         m_api.getDatabasesList(response, request);
     };
 
-    
+    m_createDatabaseUrl.word("database").string();
+    m_srv.resource[m_createDatabaseUrl.url()]["PUT"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
+        m_api.createDatabase(m_createDatabaseUrl, response, request);
+    };
+
     m_getCollectionsUrl.string();
     m_srv.resource[m_getCollectionsUrl.url()]["GET"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
         m_api.getCollections(m_getCollectionsUrl, response, request);
+    };
+
+    m_createCollectionUrl.word("collection").string().string();
+    m_srv.resource[m_createCollectionUrl.url()]["PUT"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
+        m_api.createCollection(m_createCollectionUrl, response, request);
     };
 
     m_getRecordUrl.string().string().number();
@@ -35,12 +44,12 @@ void HttpServer::setupEndpoints()
         m_api.getRecord(m_getRecordUrl, response, request);
     };
 
-    m_insertRecordUrl.string().string();
+    m_insertRecordUrl.word("records").string().string();
     m_srv.resource[m_insertRecordUrl.url()]["PUT"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
         m_api.insertRecord(m_insertRecordUrl, response, request);
     };
 
-    m_deleteRecordUrl.string().string().number();
+    m_deleteRecordUrl.word("records").string().string().number();
     m_srv.resource[m_deleteRecordUrl.url()]["DELETE"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
         m_api.deleteRecord(m_deleteRecordUrl, response, request);
     };
