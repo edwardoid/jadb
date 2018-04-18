@@ -38,7 +38,9 @@ namespace jadb
         private:
             File & m_ref;
         };
-    private:
+    protected:
+        friend class WriteTransaction;
+        bool m_dirty = false;
         std::ios::openmode m_mode;
         boost::filesystem::fstream m_stream;
         boost::filesystem::path m_path;

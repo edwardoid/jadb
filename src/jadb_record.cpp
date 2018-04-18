@@ -2,13 +2,8 @@
 #include "jadb_logger.h"
 #include "jadb_serialization.h"
 
-#define BYTE(X) (X)
-#define KBYTE(X) BYTE(1000 * (X))
-#define MBYTE(X) KBYTE(1000 * (X))
-
 using namespace jadb;
 const uint32_t Record::RecordSignature = RECORD_SIGNATURE;
-const uint32_t Record::MaxRecordSize = MBYTE(1); // 500KB
 
 
 std::atomic<uint64_t> Record::NextId(1);

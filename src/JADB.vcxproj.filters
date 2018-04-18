@@ -72,6 +72,18 @@
     <ClCompile Include="jadb_database.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="jadb_query.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jadb_condition_builder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jadb_generic_condition.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jadb_logic_conditions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="jadb_data_file.h">
@@ -141,6 +153,27 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="jadb_database.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jadb_sparsepp_adaptors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jadb_query.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jadb_condition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jadb_condition_builder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jadb_logic_conditions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jadb_generic_condition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jadb_equal_condition.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

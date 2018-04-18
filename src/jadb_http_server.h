@@ -8,6 +8,7 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
+#include <algorithm>
 
 namespace jadb
 {
@@ -22,14 +23,16 @@ namespace jadb
         void setupEndpoints();
     private:
         RESTApi m_api;
-        UrlBuilder m_createDatabaseUrl;
-        UrlBuilder m_getCollectionsUrl;
-        UrlBuilder m_createCollectionUrl;
-        UrlBuilder m_getRecordUrl;
-        UrlBuilder m_insertRecordUrl;
-        UrlBuilder m_deleteRecordUrl;
-        UrlBuilder m_indexUrl;
-        UrlBuilder m_searchByIndex;
+
+        UrlBuilder m_createDatabaseUrl;     // PUT      /<name>
+        UrlBuilder m_getCollectionsUrl;     // GET      /<db name>
+        UrlBuilder m_createCollectionUrl;   // PUT      /<db name>/<collection name>
+        UrlBuilder m_getRecordUrl;          // GET      /<db name>/<collection name>/<id>
+        UrlBuilder m_insertRecordUrl;       // PATCH    /<db name>/<collection name>
+        UrlBuilder m_deleteRecordUrl;       // DELETE   /<db name>/<collection name>/<id>
+        UrlBuilder m_indexUrl;              // PUT      /<db name>/<collection name>/index/<name>
+        UrlBuilder m_searchByIndex;         // GET      /<db name>/<collection name>/index/search/<name>
+        UrlBuilder m_query;                 // OPTIONS  /<db name>/<collection name>/query
         SimpleWeb::Server<SimpleWeb::HTTP> m_srv;
         std::unordered_map<std::string, std::shared_ptr<Database>> m_databases;
     };

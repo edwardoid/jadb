@@ -9,7 +9,8 @@ Statistics Statistics::m_instance;
 Statistics::Statistics()
     : std::thread([&]() { report(); }), m_lastReport(clock())
 {
-
+    for (auto i = 0; i < (size_t)Type::Unknown; ++i)
+        m_counts[i] = 0.0;
 }
 
 void Statistics::count(Type op, double count)
@@ -79,7 +80,7 @@ void Statistics::report()
             }
             }
 
-            m << "took " << len << "sec.";
+            m << "took " << len << " sec.";
         }
         m_instance.m_lastReport = clock();
     }
@@ -93,5 +94,5 @@ OperationDuration::~OperationDuration()
 {
     double delta = clock() - m_start;
     static const double cps = (double)(CLOCKS_PER_SEC);
-    Statistics::count(m_type, static_cast<uint32_t>(delta / cps));
+    Statistics::count(m_type, delta / cps);
 }

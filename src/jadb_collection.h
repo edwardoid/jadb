@@ -11,6 +11,7 @@
 #include "jadb_data_file.h"
 #include "jadb_index_file.h"
 #include "jadb_mapper.h"
+#include "jadb_query.h"
 
 namespace jadb
 {
@@ -33,8 +34,10 @@ namespace jadb
         uint32_t recordsPerFile() const;
         void createIndex(std::string name, std::vector<std::string>& properties);
         std::vector<Record> searchByIndex(std::string index, std::unordered_map<std::string, std::string>& filter, size_t limit = 999, size_t skip = 0);
+        std::vector<Record> query(const Query& query);
     private:
-        DataFile& bucket(uint32_t num);
+        std::shared_ptr<DataFile> bucket(uint32_t num, bool create);
+        void removeBucket(uint32_t num);
         boost::filesystem::path indexFilePath(const std::string& name) const;
     private:
         std::string m_name;

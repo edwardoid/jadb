@@ -135,17 +135,41 @@ std::vector<Record> Collection::searchByIndex(std::string index, std::unordered_
     return res;
 }
 
-DataFile& Collection::bucket(uint32_t bucket)
+std::vector<Record> Collection::query(const Query& query)
+{
+    std::vector<Record> res;
+    if (!query.exec())
+    {
+        return std::vector<Record>();
+    }
+    return res;
+}
+
+std::shared_ptr<DataFile> Collection::bucket(uint32_t bucket, bool create)
 {
     auto path = m_dataDir;
     path.append(std::to_string(bucket));
     auto fileIt = m_data.find(path.generic_string());
     if (fileIt == m_data.end())
     {
-        m_data.insert(std::make_pair(path.generic_string(), std::make_shared<DataFile>(path, this)));
+        if (create)
+        {
+            m_data.insert(std::make_pair(path.generic_string(), std::make_shared<DataFile>(path, this)));
+        }
+        else
+        {
+            return nullptr;
+        }
     }
 
-    return *(m_data.find(path.generic_string())->second.get());
+    return m_data.find(path.generic_string())->second;
+}
+
+void Collection::removeBucket(uint32_t num)
+{
+    auto path = m_dataDir;
+    path.append(std::to_string(num));
+    m_data.erase(path.generic_string());
 }
 
 boost::filesystem::path Collection::indexFilePath(const std::string& name) const
@@ -182,10 +206,10 @@ uint64_t Collection::insert(Record& record)
         record.setId(m_ids.fetch_add(1));
     Logger::msg() << "Inseting new entry into " << m_name << " id = " << (int)record.id();
     auto pos = m_mapper[record.id()];
-    auto& file = bucket(pos.Bucket);
-    auto it = (file.begin() + pos.Offset);
+    auto file = bucket(pos.Bucket, true);
+    auto it = (file->begin() + pos.Offset);
     it = record;
-    file.recordAdded();
+    file->recordAdded();
     for (auto& idx : m_indices)
     {
         idx.second->add(record);
@@ -198,18 +222,30 @@ void Collection::remove(uint64_t id)
     OperationDuration dur(Statistics::Type::Remove);
     Logger::msg() << "Removing entry id = " << (int)id;
     auto pos = m_mapper[id];
-    auto& file = bucket(pos.Bucket);
-    auto it = (file.begin() + pos.Offset);
-    file.write(~RECORD_SIGNATURE, it.absolutePos());
+    auto file = bucket(pos.Bucket, false);
+    if (file == nullptr)
+        return;
+    auto it = (file->begin() + pos.Offset);
+    if (file->checkSignature(Record::RecordSignature, it.absolutePos()))
+    {
+        file->write(~RECORD_SIGNATURE, it.absolutePos());
+        file->recordRemoved();
+        if (file->header().rows() == 0)
+        {
+            removeBucket(pos.Bucket);
+        }
+    }
 }
 
 bool Collection::contains(uint64_t id)
 {
     OperationDuration dur(Statistics::Type::GetById);
     auto pos = m_mapper[id];
-    auto& file = bucket(pos.Bucket);
-    auto it = (file.begin() + pos.Offset);
-    return file.checkSignature(Record::RecordSignature, it.absolutePos());
+    auto file = bucket(pos.Bucket, false);
+    if (file == nullptr)
+        return false;
+    auto it = (file->begin() + pos.Offset);
+    return file->checkSignature(Record::RecordSignature, it.absolutePos());
 }
 
 Record Collection::get(uint64_t id)
@@ -217,11 +253,14 @@ Record Collection::get(uint64_t id)
     OperationDuration dur(Statistics::Type::GetById);
     auto pos = m_mapper[id];
 
-    auto& file = bucket(pos.Bucket);
+    auto file = bucket(pos.Bucket, false);
 
-    auto it = (file.begin() + pos.Offset);
-    if (file.checkSignature(Record::RecordSignature, it.absolutePos()))
-        return *it;
+    if (file != nullptr)
+    {
+        auto it = (file->begin() + pos.Offset);
+        if (file->checkSignature(Record::RecordSignature, it.absolutePos()))
+            return *it;
+    }
 
     return Record();
 }

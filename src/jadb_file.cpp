@@ -79,17 +79,24 @@ void File::write(const char* data, size_t size)
 {
     Lock lock(*this);
     m_stream.write(data, size);
+    m_dirty = true;
 }
 
 void File::read(char* data, size_t size)
 {
     Lock lock(*this);
+    if (m_dirty)
+    {
+        m_stream.flush();
+        m_dirty = false;
+    }
     m_stream.read(data, size);
 }
 void File::flush()
 {
     Lock lock(*this);
     m_stream.flush();
+    m_dirty = false;
 }
 
 void File::lock()
@@ -110,7 +117,6 @@ File::~File()
 WriteTransaction::WriteTransaction(File& file, size_t bufferLength, size_t offset)
     : m_file(file)
 {
-    m_file.lock();
     if(bufferLength > 0)
         m_buff.reserve(bufferLength);
     if(offset > 0)
@@ -129,5 +135,4 @@ WriteTransaction::~WriteTransaction()
         m_file.write(m_buff.data(), m_buff.size());
         m_file.flush();
     }
-    m_file.unlock();
 }

@@ -3,6 +3,7 @@
 #include "jadb_iterative_file.h"
 #include "jadb_filesystem.h"
 #include "jadb_stats.h"
+#include "jadb_sparsepp_adaptors.h"
 
 namespace jadb
 {
@@ -73,6 +74,17 @@ void IndexFile::add(const Record& rec)
     if (e.Value == m_index.CantCreateIndex)
         return;
     e.Id = rec.id();
+
+    m_rows[e.Value].insert(e.Id);
+
+    sparsepp::SparseppMapSerializator<uint32_t,
+                                      spp::sparse_hash_set<uint64_t>,
+                                      Serialization,
+                                      sparsepp::SparseppSetSerializator<uint64_t>> ser(m_file);
+    ser.serialize(m_rows);
+
+    m_file->flush();
+
     m_file->seekForWrite(m_file->size());
     Serialization s(m_file);
     s.serialize(e);
@@ -88,26 +100,21 @@ std::vector<uint64_t> IndexFile::get(boost::property_tree::ptree& tree, size_t s
     if (filter == m_index.CantCreateIndex)
         return ids;
 
-    m_file->seekForRead(m_headerEnd);
-    IterativeFile<Entry> file(m_file, m_headerEnd);
-    auto b = file.begin();
-    auto e = file.end();
-    while (skip > 0 && b != e)
-    {
-        auto elem = *b;
-        if (elem.Value == filter)
-        {
-            skip--;
-        }
+    if (!m_rows.contains(filter))
+        return ids;
 
+    auto& rows = m_rows.at(filter);
+
+    auto b = rows.cbegin();
+    auto e = rows.cend();
+    while (skip-- > 0 && b != e)
+    {
         ++b;
     }
 
-    while (b != e && ids.size() < limit)
+    while (limit-- > 0 && b != e)
     {
-        auto elem = *b;
-        if (elem.Value == filter)
-            ids.push_back((*b).Id);
+        ids.push_back(*b);
         ++b;
     }
 

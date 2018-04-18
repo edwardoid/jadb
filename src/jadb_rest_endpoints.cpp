@@ -1,4 +1,6 @@
 #include "jadb_rest_endpoints.h"
+#include "jadb_query.h"
+#include <rapidjson/document.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
@@ -32,7 +34,7 @@ void RESTApi::createDatabase(UrlBuilder & url, std::shared_ptr<HttpServerImpl::R
 {
     auto urlRaw = request->path_match[0].str();
     auto tokens = url.parse(urlRaw);
-    auto name = tokens[1];
+    auto name = tokens[0];
 
     if (m_databases.find(name) != m_databases.end())
     {
@@ -82,8 +84,8 @@ void RESTApi::createCollection(UrlBuilder & url, std::shared_ptr<HttpServerImpl:
 {
     auto urlRaw = request->path_match[0].str();
     auto tokens = url.parse(urlRaw);
-    auto db = tokens[1];
-    auto name = tokens[2];
+    auto db = tokens[0];
+    auto name = tokens[1];
 
     auto database = m_databases.find(db);
     if (database == m_databases.end())
@@ -349,9 +351,45 @@ void RESTApi::searchByIndex(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Res
         list.push_back(std::make_pair("", r.data()));
     }
     results.add_child("items", list);
-    results.put<int>("count", res.size());
+    results.put<int>("count", static_cast<const int>(res.size()));
 
     std::stringstream ss;
     boost::property_tree::write_json(ss, results, true);
     response->write(ss);
+}
+void RESTApi::query(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request)
+{
+    auto urlRaw = request->path_match[0].str();
+    auto tokens = url.parse(urlRaw);
+    auto db = tokens[0];
+    auto name = tokens[1];
+
+    auto database = m_databases.find(db);
+    if (database == m_databases.end())
+    {
+        response->write(SimpleWeb::StatusCode::client_error_not_found);
+        return;
+    }
+    if (!database->second->has(name))
+    {
+        response->write(SimpleWeb::StatusCode::client_error_conflict);
+        return;
+    }
+
+    rapidjson::Document doc;
+    doc.Parse(request->content.string().c_str());
+    if (doc.HasParseError())
+    {
+        response->write(SimpleWeb::StatusCode::client_error_bad_request);
+        return;
+    }
+
+    Query q;
+    if (!q.create(doc))
+    {
+        response->write(SimpleWeb::StatusCode::client_error_bad_request);
+        return;
+    }
+    auto collection = database->second->collections()[name];
+    collection->query(q);
 }

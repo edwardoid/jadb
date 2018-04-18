@@ -2,7 +2,10 @@
 #define JADB_ITERATIVE_FILE_H
 
 #include <memory>
-#include <math.h>
+#include <algorithm>
+#include <cstddef>
+#undef max
+#undef min
 #include "jadb_file.h"
 
 namespace jadb
@@ -31,7 +34,8 @@ namespace jadb
             Iterator operator ++ (int) { return Iterator(*m_file, std::max(m_index, m_index + 1)); }
 
             Iterator& operator -- () { --m_index; return *this; }
-            Iterator operator -- (int) { return Iterator(*m_file, std::min(m_index, m_index - 1)); }
+            Iterator operator -- (int) {
+                return Iterator(*m_file, std::min(m_index, m_index - 1)); }
 
 
             Iterator operator + (size_t offset) { return Iterator(*m_file, std::max(m_index, m_index + offset)); }
@@ -74,7 +78,7 @@ namespace jadb
         { return Iterator(*this, 0); }
         
         Iterator end()
-        { return Iterator(*this, std::ceil((double)(m_file->size() - m_offset) / (double)m_portion)); }
+        { return Iterator(*this, std::ceil(static_cast<double>(m_file->size() - m_offset) / static_cast<double>(m_portion))); }
     protected:
         friend class Iterator;
         std::shared_ptr<File> m_file;

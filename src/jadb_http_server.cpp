@@ -20,48 +20,63 @@ HttpServer::HttpServer(int port, std::unordered_map<std::string, std::shared_ptr
 
 void HttpServer::setupEndpoints()
 {
+    // GET /
     m_srv.resource["^/$"]["GET"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
         m_api.getDatabasesList(response, request);
     };
 
-    m_createDatabaseUrl.word("database").string();
+    // PUT /<name>
+    m_createDatabaseUrl.string();
     m_srv.resource[m_createDatabaseUrl.url()]["PUT"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
         m_api.createDatabase(m_createDatabaseUrl, response, request);
     };
 
+    // GET /<name>
     m_getCollectionsUrl.string();
     m_srv.resource[m_getCollectionsUrl.url()]["GET"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
         m_api.getCollections(m_getCollectionsUrl, response, request);
     };
 
-    m_createCollectionUrl.word("collection").string().string();
+    // PUT /<db name>/<collection name>
+    m_createCollectionUrl.string().string();
     m_srv.resource[m_createCollectionUrl.url()]["PUT"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
         m_api.createCollection(m_createCollectionUrl, response, request);
     };
-
+    
+    // GET /<db name>/<collection name>/<id>
     m_getRecordUrl.string().string().number();
     m_srv.resource[m_getRecordUrl.url()]["GET"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
         m_api.getRecord(m_getRecordUrl, response, request);
     };
 
-    m_insertRecordUrl.word("records").string().string();
-    m_srv.resource[m_insertRecordUrl.url()]["PUT"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
+    // PATCH /<db name>/<collection name>
+    m_insertRecordUrl.string().string();
+    m_srv.resource[m_insertRecordUrl.url()]["PATCH"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
         m_api.insertRecord(m_insertRecordUrl, response, request);
     };
 
-    m_deleteRecordUrl.word("records").string().string().number();
+    // DELETE /<db name>/<collection name>/<id>
+    m_deleteRecordUrl.string().string().number();
     m_srv.resource[m_deleteRecordUrl.url()]["DELETE"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
         m_api.deleteRecord(m_deleteRecordUrl, response, request);
     };
 
+    // PUT /<db name>/<collection name>/index/<name>
     m_indexUrl.string().string().word("index").string();
     m_srv.resource[m_indexUrl.url()]["PUT"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
         m_api.createIndex(m_indexUrl, response, request);
     };
 
+    // GET /<db name>/<collection name>/index/search/<name>
     m_searchByIndex.string().string().word("index").word("search").string();
     m_srv.resource[m_searchByIndex.url()]["GET"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
         m_api.searchByIndex(m_searchByIndex, response, request);
+    };
+
+    // OPTIONS /<db name>/<collection name>/query
+    m_query.string().string().word("query");
+    m_srv.resource[m_query.url()]["OPTIONS"] = [&](std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request) {
+        m_api.query(m_query, response, request);
     };
 }
 

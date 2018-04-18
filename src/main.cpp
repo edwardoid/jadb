@@ -1,6 +1,6 @@
+#include "jadb_http_server.h"
 #include "jadb_logger.h"
 #include "jadb_database.h"
-#include "jadb_http_server.h"
 #include "jadb_configuration.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/program_options.hpp>
@@ -33,7 +33,7 @@ void start(boost::filesystem::path root)
         }
     }
 
-    jadb::HttpServer srv(80, databases);
+    jadb::HttpServer srv(jadb::Configuration::port(), databases);
 
     srv.start();
 }

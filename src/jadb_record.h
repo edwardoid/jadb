@@ -5,6 +5,7 @@
 #include "jadb_serialization.h"
 #include "jadb_iterative_file.h"
 #include "jadb_signed.h"
+#include "jadb_configuration.h"
 
 #include <stdint.h>
 #include <string>
@@ -31,7 +32,6 @@ namespace jadb
         void setId(uint64_t);
         void generateId();
         static const uint32_t RecordSignature;
-        static const uint32_t MaxRecordSize;
 
         std::ostream& view(std::ostream& os);
 
@@ -51,7 +51,7 @@ namespace jadb
     template<>
     inline size_t SizeInfo<Record>::size()
     {
-        return Record::MaxRecordSize;
+        return Configuration::maxRecordSize();
     }
 
     template<>

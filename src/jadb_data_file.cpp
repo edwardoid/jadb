@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <array>
 #include "jadb_collection.h"
+#include "jadb_configuration.h"
 #include "jadb_filesystem.h"
 #include "jadb_iterative_file.h"
 using namespace jadb;
@@ -23,12 +24,12 @@ DataFile::DataFile(const boost::filesystem::path& path, Collection* collection)
         m_file->open(std::ios::in | std::ios::out | std::ios::app);
         write<Header>(m_header, 0);
         
-        char* empty = new char[Record::MaxRecordSize];
-        memset(empty, 0, Record::MaxRecordSize);
+        char* empty = new char[Configuration::maxRecordSize()];
+        memset(empty, 0, sizeof(Record::RecordSignature));
+
         for(uint32_t i = 0; i < collection->recordsPerFile(); ++i)
         {
-            m_file->write(empty, Record::MaxRecordSize);
-            m_file->flush();
+            m_file->write(empty, Configuration::maxRecordSize());
         }
         delete []empty;
         m_file->close();

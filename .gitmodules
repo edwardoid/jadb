@@ -2,3 +2,9 @@
 	path = 3dp/sws
 	url = https://github.com/eidheim/Simple-Web-Server.git
 	branch = master
+[submodule "3dp/sparsepp"]
+	path = 3dp/sparsepp
+	url = https://github.com/greg7mdp/sparsepp.git
+[submodule "3dp/rapidjson"]
+	path = 3dp/rapidjson
+	url = https://github.com/Tencent/rapidjson.git
