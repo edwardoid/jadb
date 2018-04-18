@@ -4,6 +4,7 @@
 #include "jadb_condition.h"
 #include <unordered_map>
 #include <algorithm>
+#include <functional>
 
 namespace jadb
 {
@@ -27,29 +28,47 @@ namespace jadb
                     return false;
                 }
 
-                if (ConditionBuilder::type(key) != ConditionBuilder::Type::Unsupported && i->value.IsObject())
-                {
-                    Condition* c = ConditionBuilder::create(key, i->value);
-                    if (c == nullptr)
-                        return false;
-                    m_conditions.push_back(std::unique_ptr<Condition>(c));
-                    continue;
-                }
-
                 const auto& src = i->value;
-                auto& dst = m_filter[key];
 
-                if(!copy<bool>(src, dst))
-                    if(!copy<int>(src, dst))
-                        if (!copy<unsigned int>(src, dst))
-                            if (!copy<int64_t>(src, dst))
-                                if (!copy<uint64_t>(src, dst))
-                                    if (!copy<double>(src, dst))
-                                        if (!copy<float>(src, dst))
-                                            if (!copy<const char*>(src, dst))
-                                            {
-                                                return false;
-                                            }
+                if (src.IsObject())
+                {
+                    bool hasKey = false;
+                    auto obj = src.GetObject();
+                    ConditionBuilder::Type type = ConditionBuilder::type(obj, hasKey);
+                    if (!hasKey)
+                        return false;
+                    switch (type)
+                    {
+                        case ConditionBuilder::Type::Less:
+                        {
+                            createFilter<std::less<rapidjson::Value>>(key, obj.MemberBegin()->value);
+                            break;
+                        }
+                        case ConditionBuilder::Type::LessOrEqual:
+                        {
+                            createFilter<std::less_equal<rapidjson::Value>>(key, obj.MemberBegin()->value);
+                            break;
+                        }
+                        case ConditionBuilder::Type::Greater:
+                        {
+                            createFilter<std::greater<rapidjson::Value>>(key, obj.MemberBegin()->value);
+                            break;
+                        }
+                        case ConditionBuilder::Type::GreaterOrEqual:
+                        {
+                            createFilter<std::greater_equal<rapidjson::Value>>(key, obj.MemberBegin()->value);
+                            break;
+                        }
+                        default:
+                        {
+                            return false;
+                        }
+                    }
+                }
+                else
+                {
+                    createFilter<Predicate>(key, src);
+                }
             }
 
             return true;
@@ -60,52 +79,161 @@ namespace jadb
         }
     private:
 
-        template<typename T>
-        inline bool copy(const rapidjson::Value& src, rapidjson::Value& dst)
+        template<typename BinaryPredicate>
+        void createFilter(const std::string& key, const rapidjson::Value& src)
         {
-            if (src.Is<T>())
-            {
-                T val = src.Get<T>();
-                dst.Set(val);
-                return true;
-            }
+            Cmp c;
+            c.key = key;
+            static rapidjson::Value::AllocatorType alloc;
+            c.to.CopyFrom(src, alloc, true);
 
-            return false;
+            c.fn = BinaryPredicate();
+            m_filter.emplace_back(c);
         }
     private:
-        std::unordered_map<std::string, rapidjson::Value> m_filter;
-        std::vector<std::unique_ptr<Condition>> m_conditions;
+        struct Cmp
+        {
+            Cmp() {}
+            Cmp(const Cmp& src)
+                : key(src.key), fn(src.fn)
+            {
+                static rapidjson::Value::AllocatorType alloc;
+                to.CopyFrom(src.to, alloc, true);
+            }
+            std::string key;
+            rapidjson::Value to;
+            std::function<bool(const rapidjson::Value& /* src*/, const rapidjson::Value& /* dst */)> fn;
+        };
+        std::vector<Cmp> m_filter;
     };
+    
+    using Equal = EqualCondition<true, std::equal_to<rapidjson::Value>>;
+    using NotEqual = EqualCondition<false, std::equal_to<rapidjson::Value>>;
+    
+    using Less = EqualCondition<true, std::less<rapidjson::Value>>;
+    using LessOrEqual = EqualCondition<true, std::less_equal<rapidjson::Value>>;
+    
+    using Greater = EqualCondition<true, std::greater<rapidjson::Value>>;
+    using GreaterOrEqual = EqualCondition<true, std::greater_equal<rapidjson::Value>>;
+}
 
-    struct EqualCmp
+namespace std
+{
+    template<>
+    constexpr bool less<rapidjson::Value>::operator()(const rapidjson::Value& left, const rapidjson::Value& right) const
     {
-        bool operator() () {}
-    };
+        if (left.GetType() != right.GetType())
+            return false;
+        if (left.IsUint64())
+            return left.GetUint64() < right.GetUint64();
 
-    struct LessCmp
+        if (left.IsUint())
+            return left.IsUint() < right.IsUint();
+
+        if (left.IsInt())
+            return left.GetInt() < right.GetInt();
+
+        if (left.IsDouble())
+            return left.GetDouble() < right.GetDouble();
+
+        if (left.IsFloat())
+            return left.IsFloat() < right.IsFloat();
+
+        if (left.IsFloat())
+            return left.GetFloat() < right.GetFloat();
+
+        if (left.IsBool())
+            return left.GetBool() < right.GetBool();
+
+        return left.GetString() < right.GetString();
+    }
+
+    template<>
+    constexpr bool less_equal<rapidjson::Value>::operator()(const rapidjson::Value& left, const rapidjson::Value& right) const
     {
-        bool operator() () {}
-    };
-    
-    template<class P1, class P2>
-    struct P1OrP2
+        if (left.GetType() != right.GetType())
+            return false;
+        if (left.IsUint64())
+            return left.GetUint64() <= right.GetUint64();
+
+        if (left.IsUint())
+            return left.IsUint() <= right.IsUint();
+
+        if (left.IsInt())
+            return left.GetInt() <= right.GetInt();
+
+        if (left.IsDouble())
+            return left.GetDouble() <= right.GetDouble();
+
+        if (left.IsFloat())
+            return left.IsFloat() <= right.IsFloat();
+
+        if (left.IsFloat())
+            return left.GetFloat() <= right.GetFloat();
+
+        if (left.IsBool())
+            return left.GetBool() <= right.GetBool();
+
+        return left.GetString() <= right.GetString();
+    }
+
+    template<>
+    constexpr bool greater<rapidjson::Value>::operator()(const rapidjson::Value& left, const rapidjson::Value& right) const
     {
-        P1 p1;
-        P2 p2;
-        bool operator() () { return p1() || p2(); }
-    };
+        if (left.GetType() != right.GetType())
+            return false;
+        if (left.IsUint64())
+            return left.GetUint64() > right.GetUint64();
 
+        if (left.IsUint())
+            return left.IsUint() > right.IsUint();
 
-    using Equal = EqualCondition<true, EqualCmp>;
-    using NotEqual = EqualCondition<false, EqualCmp>;
-    
-    using Less = EqualCondition<true, LessCmp>;
-    
-    using LessOrEqual = EqualCondition<true, P1OrP2<LessCmp, EqualCmp>>;
-    
-    using Greater = EqualCondition<false, P1OrP2<LessCmp, EqualCmp>>;
+        if (left.IsInt())
+            return left.GetInt() > right.GetInt();
 
-    using GreaterOrEqual = EqualCondition<false, LessCmp>;
+        if (left.IsDouble())
+            return left.GetDouble() > right.GetDouble();
+
+        if (left.IsFloat())
+            return left.IsFloat() > right.IsFloat();
+
+        if (left.IsFloat())
+            return left.GetFloat() > right.GetFloat();
+
+        if (left.IsBool())
+            return left.GetBool() > right.GetBool();
+
+        return left.GetString() > right.GetString();
+    }
+
+    template<>
+    constexpr bool greater_equal<rapidjson::Value>::operator()(const rapidjson::Value& left, const rapidjson::Value& right) const
+    {
+        if (left.GetType() != right.GetType())
+            return false;
+        if (left.IsUint64())
+            return left.GetUint64() >= right.GetUint64();
+
+        if (left.IsUint())
+            return left.IsUint() >= right.IsUint();
+
+        if (left.IsInt())
+            return left.GetInt() >= right.GetInt();
+
+        if (left.IsDouble())
+            return left.GetDouble() >= right.GetDouble();
+
+        if (left.IsFloat())
+            return left.IsFloat() >= right.IsFloat();
+
+        if (left.IsFloat())
+            return left.GetFloat() >= right.GetFloat();
+
+        if (left.IsBool())
+            return left.GetBool() >= right.GetBool();
+
+        return left.GetString() >= right.GetString();
+    }
 }
 
 #endif // JADB_EQUAL_CONDITION_H

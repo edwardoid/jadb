@@ -27,6 +27,7 @@ namespace jadb
 
         static Type type(const std::string& key);
         static Type type(const rapidjson::Value::Object& obj, bool& hasKey);
+        static Type type(const rapidjson::Value::ConstObject& obj, bool& hasKey);
         static Condition* create(const std::string& key, const rapidjson::Value& obj);
     private:
         static const std::unordered_map<std::string, Type> m_typesMapping;

@@ -27,6 +27,25 @@ ConditionBuilder::Type ConditionBuilder::type(const std::string& keyword)
     return it->second;
 }
 
+ConditionBuilder::Type ConditionBuilder::type(const rapidjson::Value::ConstObject& obj, bool& hasKey)
+{
+    auto count = obj.MemberCount();
+    if (count == 0)
+        return Type::Unsupported;
+
+    Type tp = Type::Unsupported;
+
+    if (count == 1)
+    {
+        auto first = obj.MemberBegin();
+        tp = type(std::string(first->name.GetString()));
+        hasKey = tp != Type::Unsupported;
+    }
+    if (tp == Type::Unsupported)
+        tp = Type::Equal;
+    return tp;
+}
+
 ConditionBuilder::Type ConditionBuilder::type(const rapidjson::Value::Object& obj, bool& hasKey)
 {
     auto count = obj.MemberCount();
@@ -85,6 +104,22 @@ Condition* ConditionBuilder::create(const std::string& key, const rapidjson::Val
     }
     case Type::NotEqual: {
         c = new NotEqual();
+        break;
+    }
+    case Type::Less: {
+        c = new Less();
+        break;
+    }
+    case Type::LessOrEqual: {
+        c = new LessOrEqual();
+        break;
+    }
+    case Type::Greater: {
+        c = new Greater();
+        break;
+    }
+    case Type::GreaterOrEqual: {
+        c = new GreaterOrEqual();
         break;
     }
     default:
