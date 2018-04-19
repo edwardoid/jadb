@@ -1,12 +1,24 @@
 #include "jadb_record.h"
 #include "jadb_logger.h"
 #include "jadb_serialization.h"
+#include <rapidjson/ostreamwrapper.h>
 
 using namespace jadb;
 const uint32_t Record::RecordSignature = RECORD_SIGNATURE;
 
 
 std::atomic<uint64_t> Record::NextId(1);
+
+Record::Record(const Record& src)
+{
+    m_data.CopyFrom(src.m_data, m_data.GetAllocator());
+}
+
+Record::Record(Record&& src)
+{
+    m_data.CopyFrom(src.m_data.Move(), m_data.GetAllocator());
+}
+
 
 Record::Record(uint64_t id)
 {
@@ -15,20 +27,20 @@ Record::Record(uint64_t id)
 Record::Record(std::string json)
 {
     std::istringstream is(json);
-    try
+    m_data.Parse(json.c_str());
+    if (!m_data.HasMember("__id"))
     {
-        boost::property_tree::read_json(is, m_data);
-        setData(m_data);
-    }
-    catch (boost::property_tree::json_parser_error e)
-    {
-        Logger::err() << e.message();
+        m_data.AddMember("__id", NextId.fetch_add(1), m_data.GetAllocator());
     }
 }
 
-Record::Record(boost::property_tree::ptree props)
+Record::Record(rapidjson::Document& doc)
 {
-    setData(props);
+    m_data.CopyFrom(doc, m_data.GetAllocator(), true);
+    if (!m_data.HasMember("__id"))
+    {
+        m_data.AddMember("__id", NextId.fetch_add(1), m_data.GetAllocator());
+    }
 }
 
 Record::Record(const std::vector<uint8_t>& raw)
@@ -38,10 +50,12 @@ Record::Record(const std::vector<uint8_t>& raw)
 
 std::ostream& Record::view(std::ostream& os)
 {
-    boost::property_tree::write_json(os, m_data);
+    rapidjson::OStreamWrapper osw(os);
+    rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
+    m_data.Accept(writer);
     return os;
 }
-
+/*
 std::string Record::operator[] (const char* prop) const
 {
     return (*this)[std::string(prop)];
@@ -52,25 +66,27 @@ std::string Record::operator[] (const std::string& prop) const
     static std::string NoVal;
     return m_data.get<std::string>(prop, NoVal);
 }
-
-void Record::setData(boost::property_tree::ptree props)
-{
-    if (props.get<uint64_t>("__id", -1) == 0)
-    {
-        props.put<uint64_t>("__id", NextId.fetch_add(1));
-    }
-
-    m_data = props;
-}
-
+*/
 uint64_t Record::id() const
 {
-    return m_data.get<uint64_t>("__id", 0);
+    if (m_data.HasMember("__id"))
+    {
+        return m_data.FindMember("__id")->value.Get<uint64_t>();
+    }
+
+    return 0;
 }
 
 void Record::setId(uint64_t id)
 {
-    m_data.put<uint64_t>("__id", id);
+    if (m_data.HasMember("__id"))
+    {
+        m_data.FindMember("__id")->value.Set(id);
+    }
+    else
+    {
+        m_data.AddMember("__id", NextId.fetch_add(1), m_data.GetAllocator());
+    }
 }
 
 void Record::generateId()

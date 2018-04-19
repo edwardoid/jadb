@@ -1,33 +1,41 @@
 #include "jadb_rest_endpoints.h"
 #include "jadb_query.h"
 #include <rapidjson/document.h>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/istreamwrapper.h>
+#include <rapidjson/prettywriter.h>
+#include <rapidjson/reader.h>
 
 using namespace jadb;
 
+void WriteJson(std::shared_ptr<HttpServerImpl::Response> response, rapidjson::Document& doc)
+{
+    rapidjson::StringBuffer buff;
+    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buff);
+    doc.Accept(writer);
+
+    std::stringstream ss;
+    ss << buff.GetString();
+    response->write(ss);
+}
+
 RESTApi::RESTApi(std::unordered_map<std::string, std::shared_ptr<Database>>& availableDatabases)
     : m_databases(availableDatabases)
-{
-
-}
+{}
 
 void RESTApi::getDatabasesList(std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request)
 {
-    boost::property_tree::ptree dbs;
+    rapidjson::Document res(rapidjson::kObjectType);
+    rapidjson::Value list(rapidjson::kArrayType);
 
-    boost::property_tree::ptree list;
     for (auto db : m_databases)
     {
-        boost::property_tree::ptree c;
-        c.put("", db.first);
-        list.push_back(std::make_pair("", c));
+        rapidjson::Value name(db.first.c_str(), res.GetAllocator());
+        list.PushBack(name, res.GetAllocator());
     }
-    dbs.add_child("databases", list);
-
-    std::stringstream ss;
-    boost::property_tree::write_json(ss, dbs, true);
-    response->write(ss);
+    res.AddMember("databases", list, res.GetAllocator());
+    
+    WriteJson(response, res);
 }
 
 void RESTApi::createDatabase(UrlBuilder & url, std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request)
@@ -64,20 +72,17 @@ void RESTApi::getCollections(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Re
 
     auto db = dbPos->second;
 
-    boost::property_tree::ptree collections;
+    rapidjson::Document collections(rapidjson::kObjectType);
 
-    boost::property_tree::ptree list;
+    rapidjson::Value list(rapidjson::kArrayType);
     for (auto collection : db->collections())
     {
-        boost::property_tree::ptree c;
-        c.put("", collection.first);
-        list.push_back(std::make_pair("", c));
+        rapidjson::Value col(collection.first.c_str(), collections.GetAllocator());
+        list.PushBack(col, collections.GetAllocator());
     }
-    collections.add_child("collections", list);
+    collections.AddMember("collections", list, collections.GetAllocator());
 
-    std::stringstream ss;
-    boost::property_tree::write_json(ss, collections, true);
-    response->write(ss);
+    WriteJson(response, collections);
 }
 
 void RESTApi::createCollection(UrlBuilder & url, std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request)
@@ -139,9 +144,7 @@ void RESTApi::getRecord(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Respons
 
     auto rec = col->get(id);
 
-    std::stringstream ss;
-    rec.view(ss);
-    response->write(ss);
+    WriteJson(response, rec.m_data);
 }
 
 void RESTApi::insertRecord(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request)
@@ -178,9 +181,7 @@ void RESTApi::insertRecord(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Resp
         return;
     }
 
-    std::stringstream ss;
-    rec.view(ss);
-    response->write(ss);
+    WriteJson(response, rec.m_data);
 }
 
 void RESTApi::deleteRecord(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request)
@@ -249,40 +250,45 @@ void RESTApi::createIndex(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Respo
         return;
     }
 
-    std::istringstream is(request->content.string());
-    try
-    {
-        boost::property_tree::ptree fields;
-        boost::property_tree::read_json(is, fields);
-        if (fields.empty())
-        {
-            response->write(SimpleWeb::StatusCode::client_error_bad_request);
-            return;
-        }
-        auto fieldsPos = fields.find("fields");
-        std::vector<std::string> names;
-        auto fieldsChild = fields.get_child_optional("fields");
-        if (!fieldsChild)
-        {
-            response->write(SimpleWeb::StatusCode::client_error_bad_request);
-            return;
-        }
+    rapidjson::IStreamWrapper is(request->content);
+    rapidjson::Document fields;
 
-        for (auto i = fieldsChild.get().begin(); i != fieldsChild.get().end(); ++i)
-        {
-            auto f = i->second.get_value<std::string>("");
-            if (f.empty())
-                continue;
-            names.push_back(f);
-        }
-        std::sort(names.begin(), names.end());
-        auto col = colPos->second;
-        col->createIndex(name, names);
-    }
-    catch (boost::property_tree::json_parser_error e)
+    fields.ParseStream(is);
+
+    if (fields.MemberCount() == 0 || fields.HasParseError())
     {
         response->write(SimpleWeb::StatusCode::client_error_bad_request);
+        return;
     }
+
+    if (!fields.HasMember("fields"))
+    {
+        response->write(SimpleWeb::StatusCode::client_error_bad_request);
+        return;
+    }
+
+    auto fieldsMember = fields.FindMember("fields");
+    if (!fieldsMember->value.IsArray())
+    {
+        response->write(SimpleWeb::StatusCode::client_error_bad_request);
+        return;
+    }
+
+    auto fieldsList = fieldsMember->value.GetArray();
+    std::vector<std::string> names;
+    for (auto i = 0; i != fieldsList.Size(); ++i)
+    {
+        if (!fieldsList[i].IsString())
+        {
+            response->write(SimpleWeb::StatusCode::client_error_bad_request);
+            return;
+        }
+        auto f = fieldsList[i].GetString();
+        names.push_back(f);
+    }
+    std::sort(names.begin(), names.end());
+    auto col = colPos->second;
+    col->createIndex(name, names);
 
     response->write(SimpleWeb::StatusCode::success_created);
 }
@@ -343,19 +349,19 @@ void RESTApi::searchByIndex(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Res
 
     auto res = colPos->second->searchByIndex(name, q, limit, skip);
     
-    boost::property_tree::ptree results;
+    rapidjson::Document doc(rapidjson::kObjectType);
 
-    boost::property_tree::ptree list;
+    rapidjson::Value list(rapidjson::kArrayType);
     for (auto& r : res)
     {
-        list.push_back(std::make_pair("", r.data()));
+        rapidjson::Value val;
+        val.CopyFrom(r.data(), doc.GetAllocator());
+        list.PushBack(val, doc.GetAllocator());
     }
-    results.add_child("items", list);
-    results.put<int>("count", static_cast<const int>(res.size()));
+    doc.AddMember("items", list, doc.GetAllocator());
+    doc.AddMember("count", static_cast<uint32_t>(res.size()), doc.GetAllocator());
 
-    std::stringstream ss;
-    boost::property_tree::write_json(ss, results, true);
-    response->write(ss);
+    WriteJson(response, doc);
 }
 void RESTApi::query(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request)
 {

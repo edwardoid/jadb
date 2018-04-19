@@ -5,11 +5,11 @@ using namespace jadb;
 And::And() {}
 And::~And() {}
 
-bool And::exec() const
+bool And::exec(IterativeFile<Record>& file, std::set<uint64_t>* filter) const
 {
     for (auto& c : m_conditions)
     {
-        if (c->exec())
+        if (c->exec(file, filter))
         {
             return false;
         }
@@ -21,11 +21,11 @@ bool And::exec() const
 Or::Or() {}
 Or::~Or() {}
 
-bool Or::exec() const
+bool Or::exec(IterativeFile<Record>& file, std::set<uint64_t>* filter) const
 {
     for (auto& c : m_conditions)
     {
-        if (c->exec())
+        if (c->exec(file, filter))
         {
             return true;
         }

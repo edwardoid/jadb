@@ -25,6 +25,7 @@ bool GenericCondition::create(const rapidjson::Value& val)
                 return false;
             m_conditions.emplace_back(std::unique_ptr<Condition>(c));
         }
+        return true;
     }
     else if (val.IsArray())
     {
@@ -36,5 +37,7 @@ bool GenericCondition::create(const rapidjson::Value& val)
                 return false;
             m_conditions.emplace_back(std::unique_ptr<Condition>(c));
         }
+        return true;
     }
+    return false;
 }

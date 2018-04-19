@@ -10,7 +10,7 @@ namespace jadb
     public:
         And();
         virtual ~And();
-        virtual bool exec() const override;
+        virtual bool exec(IterativeFile<Record>& file, std::set<uint64_t>* filter) const override;
     };
 
     class Or : public GenericCondition
@@ -18,7 +18,7 @@ namespace jadb
     public:
         Or();
         virtual ~Or();
-        virtual bool exec() const override;
+        virtual bool exec(IterativeFile<Record>& file, std::set<uint64_t>* filter) const override;
     };
 }
 

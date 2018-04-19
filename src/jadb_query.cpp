@@ -44,11 +44,11 @@ bool Query::create(const rapidjson::Document& doc)
     return false;
 }
 
-bool Query::exec() const
+bool Query::exec(IterativeFile<Record>& file, std::set<uint64_t>* filter) const
 {
     for (auto& c : m_q)
     {
-        c->exec();
+        c->exec(file, filter);
     }
 
     return true;

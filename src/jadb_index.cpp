@@ -11,33 +11,24 @@ Index::Index(std::vector<std::string> fields)
 
 uint32_t Index::operator() (const Record& rec) const
 {
-    std::ostringstream ss;
-    for (auto& f : m_fields)
-    {
-        auto v = rec[f];
-        if (v.empty())
-            return CantCreateIndex;
-        ss << v << '+';
-    }
-
-    auto str = ss.str();
-    return hash(reinterpret_cast<const unsigned char*>(str.c_str()), static_cast<uint32_t>(str.size()));
+    return (*this)(rec.data());
 }
 
-uint32_t Index::operator() (const boost::property_tree::ptree& tree) const
+uint32_t Index::operator() (const rapidjson::Value& tree) const
 {
     std::ostringstream ss;
     static std::string Empty;
     for (auto& f : m_fields)
     {
-        auto v = tree.get<std::string>(f, Empty);
-        if (v.empty())
+        if (!tree.HasMember(f.c_str()))
+        {
             return CantCreateIndex;
-        ss << v << '+';
+        }
+        ss << tree.FindMember(f.c_str())->value.GetString() << '+';
     }
 
     auto str = ss.str();
-    return hash(reinterpret_cast<const unsigned char*>(str.c_str()), str.size());
+    return static_cast<uint32_t>(hash(reinterpret_cast<const unsigned char*>(str.c_str()), str.size()));
 }
 
 const std::vector<std::string>& Index::fields() const

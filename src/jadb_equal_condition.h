@@ -73,7 +73,7 @@ namespace jadb
 
             return true;
         }
-        virtual bool exec() const override
+        virtual bool exec(IterativeFile<Record>& file, std::set<uint64_t>* filter) const override
         {
             return true;
         }

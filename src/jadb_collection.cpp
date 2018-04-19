@@ -9,6 +9,8 @@
 
 #define MAX_RECORD_LENGTH (512 * 1024)
 
+#undef GetObject
+
 using namespace jadb;
 
 Collection::Collection(std::string name, boost::filesystem::path path, class Database* db)
@@ -122,12 +124,18 @@ std::vector<Record> Collection::searchByIndex(std::string index, std::unordered_
     if (idx == m_indices.end())
         return res;
 
-    boost::property_tree::ptree query;
+    rapidjson::Document doc;
+    rapidjson::Value query(rapidjson::kObjectType);
     for (auto q : filter)
     {
-        query.put<std::string>(q.first, q.second);
+        rapidjson::Value f(rapidjson::kStringType);
+        f.SetString(q.second.c_str(), q.second.size());
+
+        rapidjson::Value v(rapidjson::kStringType);
+        v.SetString(q.first.c_str(), q.first.size());
+        query.AddMember(v.Move(), f.Move(), doc.GetAllocator());
     }
-    auto ids = idx->second->get(query, skip, limit);
+    auto ids = idx->second->get(query.GetObject(), skip, limit);
     for (auto id : ids)
     {
         res.emplace_back(get(id));
@@ -138,9 +146,13 @@ std::vector<Record> Collection::searchByIndex(std::string index, std::unordered_
 std::vector<Record> Collection::query(const Query& query)
 {
     std::vector<Record> res;
-    if (!query.exec())
+    std::set<uint64_t> *filter = nullptr;
+    for (auto& file : m_data)
     {
-        return std::vector<Record>();
+        if (!query.exec(*(file.second), filter))
+        {
+            return std::vector<Record>();
+        }
     }
     return res;
 }

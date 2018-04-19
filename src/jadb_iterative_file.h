@@ -7,6 +7,7 @@
 #undef max
 #undef min
 #include "jadb_file.h"
+#include "jadb_serialization.h"
 
 namespace jadb
 {
