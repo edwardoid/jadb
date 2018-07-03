@@ -12,7 +12,7 @@ namespace jadb
     public:
         GenericCondition();
         virtual ~GenericCondition();
-        virtual bool create(const rapidjson::Value& doc) override;
+        virtual bool create(const nlohmann::json& doc) override;
     protected:
         std::vector<std::unique_ptr<Condition>> m_conditions;
     };

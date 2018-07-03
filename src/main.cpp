@@ -2,6 +2,9 @@
 #include "jadb_logger.h"
 #include "jadb_database.h"
 #include "jadb_configuration.h"
+
+#include "jadb_id_mapping.h"
+
 #include <boost/property_tree/ptree.hpp>
 #include <boost/program_options.hpp>
 #include <assert.h>
@@ -10,8 +13,11 @@
 #include <memory>
 #include <csignal>
 
+#include <nlohmann/json.hpp>
+
 void start(boost::filesystem::path root)
 {
+    jadb::STLHashMapMapping m;
     jadb::Configuration::load(root);
 
     std::unordered_map<std::string, std::shared_ptr<jadb::Database>> databases;
@@ -46,6 +52,7 @@ void stop(int sig)
 
     }
     jadb::Configuration::save();
+    std::exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char** argv)
@@ -54,7 +61,7 @@ int main(int argc, char** argv)
 
 
 #ifdef __linux__
-    boost::filesystem::path root = "/home/edward/Programming/jadb/tests";
+    boost::filesystem::path root = ".";
 #else
     boost::filesystem::path root = "D:\\db";
 #endif // __linux
@@ -71,7 +78,7 @@ int main(int argc, char** argv)
     std::signal(SIGINT, stop);
     std::signal(SIGABRT, stop);
     std::signal(SIGFPE, stop);
-    std::signal(SIGABRT_COMPAT, stop);
+    std::signal(SO_BSDCOMPAT, stop);
 
     boost::program_options::variables_map arguments;
     boost::program_options::store(boost::program_options::parse_command_line(argc, argv, ops), arguments);

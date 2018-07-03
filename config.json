@@ -1,0 +1,11 @@
+{
+    "rest": {
+        "port": "8080",
+        "secure": "false"
+    },
+    "data": {
+        "compression": "false",
+        "max_record_size": "5000000",
+        "root": "\/home\/esargsyan\/jadb\/data"
+    }
+}

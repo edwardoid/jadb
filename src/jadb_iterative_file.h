@@ -8,6 +8,7 @@
 #undef min
 #include "jadb_file.h"
 #include "jadb_serialization.h"
+#include <cmath>
 
 namespace jadb
 {

@@ -13,27 +13,25 @@ Query::~Query()
 
 }
 
-bool Query::create(const rapidjson::Document& doc)
+bool Query::create(const nlohmann::json& doc)
 {
-    auto it = doc.FindMember("q");
-    if (!doc.HasMember("q"))
+    auto it = doc.find("q");
+    if (it == doc.end())
     {
         return false;
     }
 
-    auto q = doc.FindMember("q");
-    if (!q->value.IsObject())
+    auto& q = *it;
+
+    if (!q.is_object())
     {
         return false;
     }
 
-    auto i = q->value.MemberBegin();
-    auto e = q->value.MemberEnd();
 
-    for (; i != e; ++i)
+    for(nlohmann::json::const_iterator i = q.begin(); i != q.end(); ++i)
     {
-        std::string keyword(i->name.GetString());
-        Condition* c = ConditionBuilder::create(keyword, i->value);
+        Condition* c = ConditionBuilder::create(i.key(), *i);
         if (c == nullptr)
         {
             return false;
@@ -41,7 +39,7 @@ bool Query::create(const rapidjson::Document& doc)
         m_q.emplace_back(std::unique_ptr<Condition>(c));
     }
 
-    return false;
+    return m_q.size() > 0;
 }
 
 bool Query::exec(IterativeFile<Record>& file, std::set<uint64_t>* filter) const

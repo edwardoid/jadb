@@ -14,17 +14,17 @@ uint32_t Index::operator() (const Record& rec) const
     return (*this)(rec.data());
 }
 
-uint32_t Index::operator() (const rapidjson::Value& tree) const
+uint32_t Index::operator() (const nlohmann::json& tree) const
 {
     std::ostringstream ss;
     static std::string Empty;
     for (auto& f : m_fields)
     {
-        if (!tree.HasMember(f.c_str()))
+        if (tree.find(f) == tree.cend())
         {
             return CantCreateIndex;
         }
-        ss << tree.FindMember(f.c_str())->value.GetString() << '+';
+        ss << tree[f] << '+';
     }
 
     auto str = ss.str();

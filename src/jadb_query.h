@@ -11,7 +11,7 @@ namespace jadb
     public:
         Query();
         ~Query();
-        bool create(const rapidjson::Document& doc);
+        bool create(const nlohmann::json& doc);
         bool exec(IterativeFile<Record>& file, std::set<uint64_t>* filter) const;
     private:
         std::vector<std::unique_ptr<Condition>> m_q;

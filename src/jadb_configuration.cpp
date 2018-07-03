@@ -24,7 +24,6 @@ void Configuration::load(boost::filesystem::path path)
             m_instance.m_port = cfg.get<uint16_t>("rest.port", 8080);
             m_instance.m_sslEnabled = cfg.get<bool>("rest.secure", false);
             m_instance.m_compressionEnabled = cfg.get<bool>("data.compression", false);
-            m_instance.m_compressionEnabled = cfg.get<bool>("data.compression", false);
             m_instance.m_root = cfg.get <std::string> ("data.root", path.parent_path().generic_string());
             boost::filesystem::create_directories(m_instance.m_root);
         }

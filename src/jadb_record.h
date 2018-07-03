@@ -6,15 +6,13 @@
 #include "jadb_iterative_file.h"
 #include "jadb_signed.h"
 #include "jadb_configuration.h"
+#include <nlohmann/json.hpp>
 
 #include <stdint.h>
 #include <string>
 #include <vector>
 #include <atomic>
 #include <sstream>
-#include <rapidjson/document.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
 
 
 #define RECORD_SIGNATURE 0xDEADBEEF
@@ -28,7 +26,7 @@ namespace jadb
         Record(Record&& src);
         Record(uint64_t id = 0);
         Record(std::string json);
-        Record(rapidjson::Document& object);
+        Record(nlohmann::json& object);
         Record(const std::vector<uint8_t>& raw);
         ~Record();
         uint64_t id() const;
@@ -37,19 +35,14 @@ namespace jadb
         static const uint32_t RecordSignature;
 
         std::ostream& view(std::ostream& os);
-        /*
-        std::string operator[] (const char* prop) const;
-        std::string operator[] (const std::string& prop) const;
-        */
-
     protected:
-        const rapidjson::Document& data() const { return m_data; }
+        const nlohmann::json& data() const { return m_data; }
         static std::atomic<uint64_t> NextId;
     protected:
         friend class RESTApi;
         friend class Serialization;
         friend class Index;
-        rapidjson::Document m_data;
+        nlohmann::json m_data;
     };
 
     template<>
@@ -61,15 +54,8 @@ namespace jadb
     template<>
     inline void Serialization::serialize<Record>(const Record& obj)
     {
-        rapidjson::StringBuffer buffer;
-
-        buffer.Clear();
-
-        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-        obj.m_data.Accept(writer);
-
         SignedItem<RECORD_SIGNATURE>::sign(m_stream);
-        Serialization::serialize(std::string(buffer.GetString()));
+        Serialization::serialize(obj.m_data.dump());
     }
 
     template<>
@@ -81,7 +67,7 @@ namespace jadb
             throw std::runtime_error("Bad signature for record");
         }
         Serialization::deserialize(json);
-        obj.m_data.Parse(json.c_str());
+        obj.m_data = std::move(nlohmann::json::parse(json));
     }
 }
 

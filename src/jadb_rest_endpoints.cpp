@@ -1,21 +1,13 @@
 #include "jadb_rest_endpoints.h"
+#include <nlohmann/json.hpp>
 #include "jadb_query.h"
-#include <rapidjson/document.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/istreamwrapper.h>
-#include <rapidjson/prettywriter.h>
-#include <rapidjson/reader.h>
 
 using namespace jadb;
 
-void WriteJson(std::shared_ptr<HttpServerImpl::Response> response, rapidjson::Document& doc)
+void WriteJson(std::shared_ptr<HttpServerImpl::Response> response, nlohmann::json& doc)
 {
-    rapidjson::StringBuffer buff;
-    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buff);
-    doc.Accept(writer);
-
     std::stringstream ss;
-    ss << buff.GetString();
+    ss << doc.dump(4);
     response->write(ss);
 }
 
@@ -25,16 +17,12 @@ RESTApi::RESTApi(std::unordered_map<std::string, std::shared_ptr<Database>>& ava
 
 void RESTApi::getDatabasesList(std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request)
 {
-    rapidjson::Document res(rapidjson::kObjectType);
-    rapidjson::Value list(rapidjson::kArrayType);
-
+    nlohmann::json list = nlohmann::json::array();
     for (auto db : m_databases)
     {
-        rapidjson::Value name(db.first.c_str(), res.GetAllocator());
-        list.PushBack(name, res.GetAllocator());
+        list.push_back(db.first);
     }
-    res.AddMember("databases", list, res.GetAllocator());
-    
+    nlohmann::json res = { { "databases", list } };
     WriteJson(response, res);
 }
 
@@ -72,16 +60,13 @@ void RESTApi::getCollections(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Re
 
     auto db = dbPos->second;
 
-    rapidjson::Document collections(rapidjson::kObjectType);
-
-    rapidjson::Value list(rapidjson::kArrayType);
+    nlohmann::json list = nlohmann::json::array();;
     for (auto collection : db->collections())
     {
-        rapidjson::Value col(collection.first.c_str(), collections.GetAllocator());
-        list.PushBack(col, collections.GetAllocator());
+        list.push_back(collection.first);
     }
-    collections.AddMember("collections", list, collections.GetAllocator());
 
+    nlohmann::json collections = { { "collections", list } };
     WriteJson(response, collections);
 }
 
@@ -250,41 +235,41 @@ void RESTApi::createIndex(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Respo
         return;
     }
 
-    rapidjson::IStreamWrapper is(request->content);
-    rapidjson::Document fields;
+    nlohmann::json fields;
 
-    fields.ParseStream(is);
-
-    if (fields.MemberCount() == 0 || fields.HasParseError())
+    try
+    {
+        fields = nlohmann::json::parse(request->content.string());
+    }
+    catch(...)
     {
         response->write(SimpleWeb::StatusCode::client_error_bad_request);
         return;
     }
 
-    if (!fields.HasMember("fields"))
+    if (fields.empty() == 0)
     {
         response->write(SimpleWeb::StatusCode::client_error_bad_request);
         return;
     }
 
-    auto fieldsMember = fields.FindMember("fields");
-    if (!fieldsMember->value.IsArray())
+    auto fieldsIt = fields.find("fields");    
+    if (fieldsIt == fields.end() || !fieldsIt->is_array())
     {
         response->write(SimpleWeb::StatusCode::client_error_bad_request);
         return;
     }
 
-    auto fieldsList = fieldsMember->value.GetArray();
     std::vector<std::string> names;
-    for (auto i = 0; i != fieldsList.Size(); ++i)
+    auto& fieldsMember = *fieldsIt;
+    for (auto i = 0; i != fieldsMember.size(); ++i)
     {
-        if (!fieldsList[i].IsString())
+        if (!fieldsMember[i].is_string())
         {
             response->write(SimpleWeb::StatusCode::client_error_bad_request);
             return;
         }
-        auto f = fieldsList[i].GetString();
-        names.push_back(f);
+        names.push_back((nlohmann::json::string_t)fieldsMember[i]);
     }
     std::sort(names.begin(), names.end());
     auto col = colPos->second;
@@ -348,18 +333,17 @@ void RESTApi::searchByIndex(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Res
     }
 
     auto res = colPos->second->searchByIndex(name, q, limit, skip);
-    
-    rapidjson::Document doc(rapidjson::kObjectType);
 
-    rapidjson::Value list(rapidjson::kArrayType);
+    nlohmann::json list = nlohmann::json::array();
     for (auto& r : res)
     {
-        rapidjson::Value val;
-        val.CopyFrom(r.data(), doc.GetAllocator());
-        list.PushBack(val, doc.GetAllocator());
+        list.push_back(r.data());
     }
-    doc.AddMember("items", list, doc.GetAllocator());
-    doc.AddMember("count", static_cast<uint32_t>(res.size()), doc.GetAllocator());
+
+    nlohmann::json doc = {
+        { "items" , list},
+        { "items" , res.size() }
+    };
 
     WriteJson(response, doc);
 }
@@ -382,20 +366,21 @@ void RESTApi::query(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Response> r
         return;
     }
 
-    rapidjson::Document doc;
-    doc.Parse(request->content.string().c_str());
-    if (doc.HasParseError())
+    try
+    {
+        nlohmann::json doc = nlohmann::json::parse(request->content.string());
+        Query q;
+        if (!q.create(doc))
+        {
+            response->write(SimpleWeb::StatusCode::client_error_bad_request);
+            return;
+        }
+        auto collection = database->second->collections()[name];
+        collection->query(q);
+    }
+    catch(...)
     {
         response->write(SimpleWeb::StatusCode::client_error_bad_request);
         return;
     }
-
-    Query q;
-    if (!q.create(doc))
-    {
-        response->write(SimpleWeb::StatusCode::client_error_bad_request);
-        return;
-    }
-    auto collection = database->second->collections()[name];
-    collection->query(q);
 }

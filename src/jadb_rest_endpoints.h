@@ -1,7 +1,7 @@
 #ifndef JADB_REST_ENDPOINTS_H
 #define JADB_REST_ENDPOINTS_H
 
-#include "sws/server_http.hpp"
+#include <sws/server_http.hpp>
 #include "jadb_database.h"
 #include "jadb_record.h"
 #include "jadb_http_url_builder.h"

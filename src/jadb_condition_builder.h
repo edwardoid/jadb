@@ -1,6 +1,7 @@
 #ifndef JADB_CONDITION_BUILDER_H
 #define JADB_CONDITION_BUILDER_H
 
+#include <nlohmann/json.hpp>
 #include "jadb_condition.h"
 #include <string>
 #include <unordered_map>
@@ -26,9 +27,8 @@ namespace jadb
         };
 
         static Type type(const std::string& key);
-        static Type type(const rapidjson::Value::Object& obj, bool& hasKey);
-        static Type type(const rapidjson::Value::ConstObject& obj, bool& hasKey);
-        static Condition* create(const std::string& key, const rapidjson::Value& obj);
+        static Type type(const nlohmann::json& obj, bool& hasKey);
+        static Condition* create(const std::string& key, const nlohmann::json& obj);
     private:
         static const std::unordered_map<std::string, Type> m_typesMapping;
     };

@@ -91,7 +91,7 @@ void IndexFile::add(const Record& rec)
     m_file->flush();
 }
 
-std::vector<uint64_t> IndexFile::get(const rapidjson::Value::Object& tree, size_t skip, size_t limit)
+std::vector<uint64_t> IndexFile::get(const nlohmann::json& tree, size_t skip, size_t limit)
 {
     OperationDuration op(Statistics::Type::SearchByIndex);
     std::vector<uint64_t> ids;

@@ -2,6 +2,25 @@
 #include "jadb_logic_conditions.h"
 #include "jadb_equal_condition.h"
 
+/*
+    Condition queries:
+
+    {
+        "a" == "a",
+        "$not" : [
+            {
+                "$eq" : {
+                    "name" : "edward",
+                    "service" : "github"
+                }
+            },
+            {
+                "repo" : "jadb"
+            }
+        ]
+    }
+*/
+
 using namespace jadb;
 
 const std::unordered_map<std::string, ConditionBuilder::Type> ConditionBuilder::m_typesMapping(
@@ -27,18 +46,12 @@ ConditionBuilder::Type ConditionBuilder::type(const std::string& keyword)
     return it->second;
 }
 
-ConditionBuilder::Type ConditionBuilder::type(const rapidjson::Value::ConstObject& obj, bool& hasKey)
+ConditionBuilder::Type ConditionBuilder::type(const nlohmann::json& obj, bool& hasKey)
 {
-    auto count = obj.MemberCount();
-    if (count == 0)
-        return Type::Unsupported;
-
     Type tp = Type::Unsupported;
-
-    if (count == 1)
+    if (obj.size() == 1)
     {
-        auto first = obj.MemberBegin();
-        tp = type(std::string(first->name.GetString()));
+        tp = type(*obj.cbegin());
         hasKey = tp != Type::Unsupported;
     }
     if (tp == Type::Unsupported)
@@ -46,46 +59,26 @@ ConditionBuilder::Type ConditionBuilder::type(const rapidjson::Value::ConstObjec
     return tp;
 }
 
-ConditionBuilder::Type ConditionBuilder::type(const rapidjson::Value::Object& obj, bool& hasKey)
-{
-    auto count = obj.MemberCount();
-    if (count == 0)
-        return Type::Unsupported;
-    
-    Type tp = Type::Unsupported;
-
-    if (count == 1)
-    {
-        auto first = obj.MemberBegin();
-        if (first->value.IsArray())
-            tp = type(std::string(first->name.GetString()));
-        hasKey = type(first->name.GetString()) != Type::Unsupported;
-    }
-    if (tp == Type::Unsupported)
-        tp = Type::Equal;
-    return tp;
-}
-
-Condition* ConditionBuilder::create(const std::string& key, const rapidjson::Value& val)
+Condition* ConditionBuilder::create(const std::string& key, const nlohmann::json& val)
 {
     Condition* c = nullptr;
 
     Type tp = Type::Unsupported;
 
-    const rapidjson::Value* data = &val;
+    nlohmann::json data;
     if (key.empty())
     {
-        rapidjson::Value::Object obj = const_cast<rapidjson::Value&>(val).GetObject();
         bool hasKey = false;
-        tp = type(obj, hasKey);
+        tp = type(val, hasKey);
         if (tp != Type::Unsupported && hasKey)
         {
-            data = &(val.MemberBegin()->value);
+            data = *(val.begin());
         }
     }
     else
     {
         tp = type(key);
+        data = val;
     }
 
     switch (tp)
@@ -127,7 +120,7 @@ Condition* ConditionBuilder::create(const std::string& key, const rapidjson::Val
     }
     if (c != nullptr)
     {
-        if (!c->create(*data))
+        if (!c->create(data))
         {
             delete c;
             c = nullptr;

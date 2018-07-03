@@ -3,12 +3,12 @@ OBJ_DIR := obj/
 BIN_DIR := bin/
 DEP_DIR := dep/
 LIB_DIR := lib/
-INC_DIR := ./src -I/usr/include -I./3dp 
-CC:= g++-7 -std=c++14 -g
+INC_DIR := ./src -I/usr/include -I./3dp -I./3dp/nlohmann/include 
+CC:= g++-7 -std=c++17 -g -w
 SRC_FILES:=$(wildcard $(SRC_DIR)*.cpp)
 OBJ_FILES:=$(patsubst $(SRC_DIR), $(OBJ_DIR),$(patsubst $(SRC_DIR)%.cpp,$(OBJ_DIR)%.o,$(SRC_FILES)))
 DEFILES:=$(patsubst $(SRC_DIR), $(DEP_DIR),$(patsubst $(SRC_DIR)%.cpp,$(DEP_DIR)%.o,$(SRC_FILES)))
-LINK_LIBS:= -lboost_system -lboost_filesystem -lpthread
+LINK_LIBS:= -lboost_system -lboost_filesystem -lboost_program_options -lboost_date_time -lpthread
 BINARY_TARGET := jadb
 .PHONY: all
 all: binary

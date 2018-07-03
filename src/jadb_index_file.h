@@ -8,6 +8,7 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem.hpp>
 #include <sparsepp/sparsepp/spp.h>
+#include <nlohmann/json.hpp>
 
 #include "jadb_file.h"
 #include "jadb_index.h"
@@ -22,13 +23,12 @@ namespace jadb
         IndexFile(const boost::filesystem::path& path, std::string name, std::vector<std::string>& fields);
         ~IndexFile();
         void add(const Record& record);
-        std::vector<uint64_t> get(const rapidjson::Value::Object& query, size_t skip = 0, size_t limit = 999);
+        std::vector<uint64_t> get(const nlohmann::json& query, size_t skip = 0, size_t limit = 999);
         const Index& index() const { return m_index; }
         const std::string& name() const { return m_name; }
     private:
         void save();
     private:
-        
         spp::sparse_hash_map<uint32_t, spp::sparse_hash_set<uint64_t>> m_rows;
 
         std::shared_ptr<File> m_file;

@@ -13,26 +13,19 @@ GenericCondition::~GenericCondition()
 
 }
 
-bool GenericCondition::create(const rapidjson::Value& val)
+bool GenericCondition::create(const nlohmann::json& val)
 {
-    if (val.IsObject())
+    if (val.is_object() || val.is_array())
     {
-        for (auto i = val.MemberBegin(); i != val.MemberEnd(); ++i)
+        bool obj = val.is_object();
+        for(auto i = val.begin(); i != val.end(); ++i)
         {
-            std::string kw(i->name.GetString());
-            Condition* c = ConditionBuilder::create(kw, i->value);
-            if (c == nullptr)
-                return false;
-            m_conditions.emplace_back(std::unique_ptr<Condition>(c));
-        }
-        return true;
-    }
-    else if (val.IsArray())
-    {
-        auto array = val.GetArray();
-        for (auto& obj : array)
-        {
-            Condition* c = ConditionBuilder::create("", obj);
+            Condition* c = nullptr;
+            if(obj)
+                c = ConditionBuilder::create(i.key(), *i);
+            else
+                c = ConditionBuilder::create("", *i);
+                
             if (c == nullptr)
                 return false;
             m_conditions.emplace_back(std::unique_ptr<Condition>(c));

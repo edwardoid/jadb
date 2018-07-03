@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <string>
-#include <rapidjson/document.h>
 #include "jadb_record.h"
 #include "jadb_serialization.h"
 
@@ -15,7 +14,7 @@ namespace jadb
         static const uint32_t CantCreateIndex;
         Index(std::vector<std::string> fields = { "_id" });
         uint32_t operator()(const Record& rec) const;
-        uint32_t operator()(const rapidjson::Value& tree) const;
+        uint32_t operator()(const nlohmann::json& tree) const;
         const std::vector<std::string>& fields() const;
     protected:
         friend class Serialization;

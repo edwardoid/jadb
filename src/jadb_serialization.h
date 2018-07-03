@@ -70,8 +70,8 @@ namespace jadb
             Serialization(m_stream).serialize<uint32_t>(sz);
             for (auto& kp : obj)
             {
-                KeySerializer(m_stream).serialize<K>(kp.first);
-                ValueSerilizer(m_stream).serialize<V>(kp.second);
+                KeySerializer(m_stream).serialize(kp.first);
+                ValueSerilizer(m_stream).serialize(kp.second);
             }
         }
 
@@ -84,8 +84,8 @@ namespace jadb
             {
                 K key;
                 V value;
-                KeySerializer(m_stream).deserialize<K>(key);
-                ValueSerilizer(m_stream).deserialize<V>(value);
+                KeySerializer(m_stream).deserialize(key);
+                ValueSerilizer(m_stream).deserialize(value);
                 obj.insert(std::make_pair(key, value));
             }
         }

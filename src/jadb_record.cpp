@@ -1,7 +1,6 @@
 #include "jadb_record.h"
 #include "jadb_logger.h"
 #include "jadb_serialization.h"
-#include <rapidjson/ostreamwrapper.h>
 
 using namespace jadb;
 const uint32_t Record::RecordSignature = RECORD_SIGNATURE;
@@ -11,14 +10,13 @@ std::atomic<uint64_t> Record::NextId(1);
 
 Record::Record(const Record& src)
 {
-    m_data.CopyFrom(src.m_data, m_data.GetAllocator());
+    m_data = src.m_data;
 }
 
 Record::Record(Record&& src)
 {
-    m_data.CopyFrom(src.m_data.Move(), m_data.GetAllocator());
+    m_data = std::move(src.m_data);
 }
-
 
 Record::Record(uint64_t id)
 {
@@ -26,20 +24,19 @@ Record::Record(uint64_t id)
 
 Record::Record(std::string json)
 {
-    std::istringstream is(json);
-    m_data.Parse(json.c_str());
-    if (!m_data.HasMember("__id"))
+    m_data = std::move(nlohmann::json::parse(json));
+    if (m_data.find("__id") == m_data.end())
     {
-        m_data.AddMember("__id", NextId.fetch_add(1), m_data.GetAllocator());
+        m_data["__id"] = NextId.fetch_add(1);
     }
 }
 
-Record::Record(rapidjson::Document& doc)
+Record::Record(nlohmann::json& doc)
+    : m_data(doc)
 {
-    m_data.CopyFrom(doc, m_data.GetAllocator(), true);
-    if (!m_data.HasMember("__id"))
+    if (m_data.find("__id") == m_data.end())
     {
-        m_data.AddMember("__id", NextId.fetch_add(1), m_data.GetAllocator());
+        m_data["__id"] = NextId.fetch_add(1);
     }
 }
 
@@ -50,9 +47,7 @@ Record::Record(const std::vector<uint8_t>& raw)
 
 std::ostream& Record::view(std::ostream& os)
 {
-    rapidjson::OStreamWrapper osw(os);
-    rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
-    m_data.Accept(writer);
+    os << m_data;
     return os;
 }
 /*
@@ -69,23 +64,19 @@ std::string Record::operator[] (const std::string& prop) const
 */
 uint64_t Record::id() const
 {
-    if (m_data.HasMember("__id"))
-    {
-        return m_data.FindMember("__id")->value.Get<uint64_t>();
-    }
-
-    return 0;
+    static const uint64_t NoId = 0;
+    return m_data.value("__id", NoId);
 }
 
 void Record::setId(uint64_t id)
 {
-    if (m_data.HasMember("__id"))
+    if (m_data.find("__id") == m_data.end())
     {
-        m_data.FindMember("__id")->value.Set(id);
+        m_data["__id"] = id;
     }
     else
     {
-        m_data.AddMember("__id", NextId.fetch_add(1), m_data.GetAllocator());
+        m_data["__id"] = NextId.fetch_add(1);
     }
 }
 

@@ -124,18 +124,12 @@ std::vector<Record> Collection::searchByIndex(std::string index, std::unordered_
     if (idx == m_indices.end())
         return res;
 
-    rapidjson::Document doc;
-    rapidjson::Value query(rapidjson::kObjectType);
+    nlohmann::json query;
     for (auto q : filter)
     {
-        rapidjson::Value f(rapidjson::kStringType);
-        f.SetString(q.second.c_str(), q.second.size());
-
-        rapidjson::Value v(rapidjson::kStringType);
-        v.SetString(q.first.c_str(), q.first.size());
-        query.AddMember(v.Move(), f.Move(), doc.GetAllocator());
+        query.emplace(q.first, q.second);
     }
-    auto ids = idx->second->get(query.GetObject(), skip, limit);
+    auto ids = idx->second->get(query, skip, limit);
     for (auto id : ids)
     {
         res.emplace_back(get(id));
