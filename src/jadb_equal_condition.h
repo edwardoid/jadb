@@ -1,7 +1,7 @@
 #ifndef JADB_EQUAL_CONDITION_H
 #define JADB_EQUAL_CONDITION_H
 
-#include "jadb_condition.h"
+#include "jadb_collection.h"
 #include <unordered_map>
 #include <algorithm>
 #include <functional>
@@ -74,7 +74,7 @@ namespace jadb
 
             return true;
         }
-        virtual bool exec(IterativeFile<Record>& file, std::set<uint64_t>* filter) const override
+        virtual bool exec(const Collection& record, btree::btree_set<uint64_t>* filter) const override
         {
             return true;
         }

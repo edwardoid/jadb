@@ -10,3 +10,6 @@
 [submodule "3dp/sws"]
 	path = 3dp/sws
 	url = https://github.com/eidheim/Simple-Web-Server.git
+[submodule "3dp/cpp-btree"]
+	path = 3dp/cpp-btree
+	url = https://github.com/diegocaro/cpp-btree.git

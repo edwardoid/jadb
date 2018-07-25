@@ -11,8 +11,8 @@
 #include "jadb_data_file.h"
 #include "jadb_index_file.h"
 #include "jadb_mapper.h"
-#include "jadb_query.h"
 #include "jadb_id_mapping.h"
+#include "jadb_query.h"
 
 namespace jadb
 {

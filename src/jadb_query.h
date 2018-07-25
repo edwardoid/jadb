@@ -1,7 +1,8 @@
 #ifndef JADB_QUERY_H
 #define JADB_QUERY_H
 
-#include "jadb_condition.h"
+#include <nlohmann/json.hpp>
+#include <cpp-btree/btree_set.h>
 #include <vector>
 
 namespace jadb
@@ -12,9 +13,9 @@ namespace jadb
         Query();
         ~Query();
         bool create(const nlohmann::json& doc);
-        bool exec(IterativeFile<Record>& file, std::set<uint64_t>* filter) const;
+        bool exec(const class Collection* collection, btree::btree_set<uint64_t>* filter) const;
     private:
-        std::vector<std::unique_ptr<Condition>> m_q;
+        std::vector<std::unique_ptr<class Condition>> m_q;
     };
 }
 

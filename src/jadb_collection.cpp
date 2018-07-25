@@ -7,6 +7,7 @@
 #include "jadb_utils.h"
 #include <memory>
 #include <vector>
+#include <cpp-btree/btree_set.h>
 
 #define MAX_RECORD_LENGTH (512 * 1024)
 
@@ -149,10 +150,10 @@ std::vector<Record> Collection::searchByIndex(std::string index, std::unordered_
 std::vector<Record> Collection::query(const Query& query)
 {
     std::vector<Record> res;
-    std::set<uint64_t> *filter = nullptr;
+    btree::btree_set<uint64_t>* filter = nullptr;
     for (auto& file : m_data)
     {
-        if (!query.exec(*(file.second), filter))
+        if (!query.exec(this, filter))
         {
             return std::vector<Record>();
         }

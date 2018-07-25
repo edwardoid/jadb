@@ -1,5 +1,7 @@
 #include "jadb_query.h"
+#include "jadb_collection.h"
 #include "jadb_condition_builder.h"
+#include <cpp-btree/btree_set.h>
 
 using namespace jadb;
 
@@ -42,11 +44,11 @@ bool Query::create(const nlohmann::json& doc)
     return m_q.size() > 0;
 }
 
-bool Query::exec(IterativeFile<Record>& file, std::set<uint64_t>* filter) const
+bool Query::exec(const Collection* collection, btree::btree_set<uint64_t>* filter) const
 {
     for (auto& c : m_q)
     {
-        c->exec(file, filter);
+        c->exec(*collection, filter);
     }
 
     return true;

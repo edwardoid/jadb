@@ -1,11 +1,9 @@
 #ifndef JADB_CONDITION_H
 #define JADB_CONDITION_H
 
-#include <memory>
-#include <set>
+#include "jadb_collection.h"
 #include <nlohmann/json.hpp>
-#include "jadb_iterative_file.h"
-#include "jadb_record.h"
+#include <cpp-btree/btree_set.h>
 
 namespace jadb
 {
@@ -13,7 +11,7 @@ namespace jadb
     {
     public:
         virtual bool create(const nlohmann::json& obj) = 0;
-        virtual bool exec(IterativeFile<Record>& file, std::set<uint64_t>* filter) const = 0;
+        virtual bool exec(const Collection& collection, btree::btree_set<uint64_t>* filter) const = 0;
         virtual ~Condition() {};
     };
 }
