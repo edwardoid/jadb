@@ -74,8 +74,43 @@ namespace jadb
 
             return true;
         }
-        virtual bool exec(const Collection& record, btree::btree_set<uint64_t>* filter) const override
+        virtual bool exec(const Collection& collection, btree::btree_set<uint64_t>*& filter) const override
         {
+            for(auto b = collection.recordsBegin(),
+                e = collection.recordsEnd(); b != e; ++b)
+            {
+                bool ok = false;
+                auto record = collection.get(b->first, true);
+                for(auto& c : m_filter)
+                {
+                    auto& data = record.data();
+
+                    if (data.find(c.key) == data.end())
+                    {
+                        ok = false;
+                        break;
+                    }
+
+                    if(c.fn(data[c.key], c.to))
+                    {
+                        ok = true;
+                    }
+                }
+
+                if(filter == nullptr && ok)
+                {
+                    filter = new btree::btree_set<uint64_t>();
+                }
+
+                if(ok)
+                {
+                    filter->insert(b->first);
+                }
+                else if(filter != nullptr)
+                {
+                    filter->erase(b->first);
+                }
+            }
             return true;
         }
     private:

@@ -158,10 +158,28 @@ std::vector<Record> Collection::query(const Query& query)
             return std::vector<Record>();
         }
     }
+
+    if(filter != nullptr)
+    {
+        for(auto id : *filter)
+        {
+            res.emplace_back(get(id, true));
+        }
+    }
     return res;
 }
 
-std::shared_ptr<DataFile> Collection::bucket(uint32_t bucket, bool create)
+IdMapping::ConstIterator Collection::recordsBegin() const
+{
+    return m_records.begin();
+}
+
+IdMapping::ConstIterator Collection::recordsEnd() const
+{
+    return m_records.end();
+}
+
+std::shared_ptr<DataFile> Collection::bucket(uint32_t bucket, bool create) const
 {
     auto path = m_dataDir;
     path.append(std::to_string(bucket));
@@ -170,7 +188,7 @@ std::shared_ptr<DataFile> Collection::bucket(uint32_t bucket, bool create)
     {
         if (create)
         {
-            m_data.insert(std::make_pair(path.generic_string(), std::make_shared<DataFile>(path, this)));
+            m_data.insert(std::make_pair(path.generic_string(), std::make_shared<DataFile>(path, const_cast<Collection*>(this))));
         }
         else
         {
@@ -262,7 +280,7 @@ bool Collection::contains(uint64_t id)
     return m_records.has(id);
 }
 
-Record Collection::get(uint64_t id)
+Record Collection::get(uint64_t id, bool fast) const
 {
     OperationDuration dur(Statistics::Type::GetById);
 
@@ -275,7 +293,7 @@ Record Collection::get(uint64_t id)
         if (file != nullptr)
         {
             auto it = (file->begin() + pos.Offset);
-            if (file->checkSignature(Record::RecordSignature, it.absolutePos()))
+            if (fast || file->checkSignature(Record::RecordSignature, it.absolutePos()))
                 return *it;
         }
     }

@@ -21,8 +21,8 @@ namespace jadb
         {}
         Mapper(const Mapper& src) { *this = src; }
         const Mapper& operator = (const Mapper& src) { m_buckets = src.m_buckets; m_capacity = src.m_capacity; m_hasher = src.m_hasher; return *this; }
-        Position operator[](const KeyT key) { return find(key); }
-        Position find(KeyT key);
+        Position operator[](const KeyT key) const { return find(key); }
+        Position find(KeyT key) const;
         uint32_t buckets() const { return m_buckets; }
         uint32_t capacity() const { return m_capacity; }
     private:
@@ -33,7 +33,7 @@ namespace jadb
 
 
     template<typename KeyT, class Hash>
-    typename Mapper<KeyT, Hash>::Position Mapper<KeyT, Hash>::find(KeyT key)
+    typename Mapper<KeyT, Hash>::Position Mapper<KeyT, Hash>::find(KeyT key) const
     {
         uint32_t val = static_cast<uint32_t>(key);
         Position pos;

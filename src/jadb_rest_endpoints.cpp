@@ -376,7 +376,20 @@ void RESTApi::query(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Response> r
             return;
         }
         auto collection = database->second->collections()[name];
-        collection->query(q);
+        auto res = collection->query(q);
+
+        nlohmann::json list = nlohmann::json::array();
+        for (auto& r : res)
+        {
+            list.push_back(r.data());
+        }
+
+        nlohmann::json resp = {
+            { "docs" , list},
+            { "size" , res.size() }
+        };
+
+        WriteJson(response, resp);
     }
     catch(...)
     {

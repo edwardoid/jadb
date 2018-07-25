@@ -35,7 +35,7 @@ namespace jadb
         static const uint32_t RecordSignature;
 
         std::ostream& view(std::ostream& os);
-    protected:
+
         const nlohmann::json& data() const { return m_data; }
         static std::atomic<uint64_t> NextId;
     protected:

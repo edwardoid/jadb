@@ -44,7 +44,7 @@ bool Query::create(const nlohmann::json& doc)
     return m_q.size() > 0;
 }
 
-bool Query::exec(const Collection* collection, btree::btree_set<uint64_t>* filter) const
+bool Query::exec(const Collection* collection, btree::btree_set<uint64_t>*& filter) const
 {
     for (auto& c : m_q)
     {
