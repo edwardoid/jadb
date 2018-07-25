@@ -4,6 +4,7 @@
 #include "jadb_filesystem.h"
 #include "jadb_syncronizer.h"
 #include "jadb_stats.h"
+#include "jadb_utils.h"
 #include <memory>
 #include <vector>
 
@@ -26,31 +27,38 @@ Collection::Collection(std::string name, boost::filesystem::path path, class Dat
     std::vector<std::string> data;
     std::vector<std::string> indices;
 
+
+    bool newCollection = !boost::filesystem::exists(m_path);
     auto file = FileSystem::Get(m_path);
     file->close();
     file->open(std::ios::in | std::ios::binary);
     file->lock();
-    uint32_t nextId = 0;
-    Serialization(file).deserialize(nextId);
+    uint64_t nextId = 0;
+
+    if(!newCollection)
+    {
+        Serialization(file).deserialize(nextId);
+        ArraySerialization(file).deserialize<std::string>(indices);
+        ArraySerialization(file).deserialize<std::string>(data);
+        Serialization(file).deserialize(m_records);
+        
+        for (auto& i : indices)
+        {
+            auto p = m_indicesDir;
+            p.append(i);
+            Logger::msg(1) << "Loaded index file " << p.generic_string() << " for collection " << m_name;
+            m_indices.insert(std::make_pair(p.generic_string(), std::make_shared<IndexFile>(p)));
+        }
+
+        for (auto& i : data)
+        {
+            auto file = std::make_shared<DataFile>(i, this);
+
+            Logger::msg(1) << "Loaded data file " << i << " for collection " << m_name << " (" << file->header().rows() << " rows";
+            m_data.insert(std::make_pair(i, file));
+        }
+    }
     m_ids.store(nextId);
-    ArraySerialization(file).deserialize<std::string>(indices);
-    ArraySerialization(file).deserialize<std::string>(data);
-
-    for (auto& i : indices)
-    {
-        auto p = m_indicesDir;
-        p.append(i);
-        Logger::msg(1) << "Loaded index file " << p.generic_string() << " for collection " << m_name;
-        m_indices.insert(std::make_pair(p.generic_string(), std::make_shared<IndexFile>(p)));
-    }
-
-    for (auto& i : data)
-    {
-        auto file = std::make_shared<DataFile>(i, this);
-
-        Logger::msg(1) << "Loaded data file " << i << " for collection " << m_name << " (" << file->header().rows() << " rows";
-        m_data.insert(std::make_pair(i, file));
-    }
     file->unlock();
 
     Syncronizer::SyncronizationTask task([&]() {
@@ -74,6 +82,7 @@ Collection::Collection(std::string name, boost::filesystem::path path, class Dat
         Serialization(file).serialize(m_ids.load());
         ArraySerialization(file).serialize<std::string>(indices);
         ArraySerialization(file).serialize<std::string>(data);
+        Serialization(file).serialize(m_records);
         file->flush();
         file->close();
         file->unlock();
@@ -211,10 +220,12 @@ uint64_t Collection::insert(Record& record)
     if (record.id() == 0)
         record.setId(m_ids.fetch_add(1));
     Logger::msg() << "Inseting new entry into " << m_name << " id = " << (int)record.id();
-    auto pos = m_mapper[record.id()];
+    auto hashValue = hash(record.id());
+    auto pos = m_mapper[hashValue];
     auto file = bucket(pos.Bucket, true);
     auto it = (file->begin() + pos.Offset);
     it = record;
+    m_records.insert(record.id(), hashValue);
     file->recordAdded();
     for (auto& idx : m_indices)
     {
@@ -227,7 +238,8 @@ void Collection::remove(uint64_t id)
 {
     OperationDuration dur(Statistics::Type::Remove);
     Logger::msg() << "Removing entry id = " << (int)id;
-    auto pos = m_mapper[id];
+    m_records.remove(id);
+    auto pos = m_mapper[hash(id)];
     auto file = bucket(pos.Bucket, false);
     if (file == nullptr)
         return;
@@ -246,26 +258,25 @@ void Collection::remove(uint64_t id)
 bool Collection::contains(uint64_t id)
 {
     OperationDuration dur(Statistics::Type::GetById);
-    auto pos = m_mapper[id];
-    auto file = bucket(pos.Bucket, false);
-    if (file == nullptr)
-        return false;
-    auto it = (file->begin() + pos.Offset);
-    return file->checkSignature(Record::RecordSignature, it.absolutePos());
+    return m_records.has(id);
 }
 
 Record Collection::get(uint64_t id)
 {
     OperationDuration dur(Statistics::Type::GetById);
-    auto pos = m_mapper[id];
 
-    auto file = bucket(pos.Bucket, false);
-
-    if (file != nullptr)
+    if(m_records.has(id))
     {
-        auto it = (file->begin() + pos.Offset);
-        if (file->checkSignature(Record::RecordSignature, it.absolutePos()))
-            return *it;
+        auto pos = m_mapper[m_records.key(id)];
+
+        auto file = bucket(pos.Bucket, false);
+
+        if (file != nullptr)
+        {
+            auto it = (file->begin() + pos.Offset);
+            if (file->checkSignature(Record::RecordSignature, it.absolutePos()))
+                return *it;
+        }
     }
 
     return Record();

@@ -25,7 +25,7 @@ DataFile::DataFile(const boost::filesystem::path& path, Collection* collection)
         write<Header>(m_header, 0);
         
         char* empty = new char[Configuration::maxRecordSize()];
-        memset(empty, 0, sizeof(Record::RecordSignature));
+        memset(empty, ~Record::RecordSignature, sizeof(Record::RecordSignature));
 
         for(uint32_t i = 0; i < collection->recordsPerFile(); ++i)
         {

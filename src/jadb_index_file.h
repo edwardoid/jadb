@@ -13,6 +13,7 @@
 #include "jadb_file.h"
 #include "jadb_index.h"
 #include "jadb_record.h"
+#include "jadb_id_mapping.h"
 
 namespace jadb
 {
@@ -30,7 +31,6 @@ namespace jadb
         void save();
     private:
         spp::sparse_hash_map<uint32_t, spp::sparse_hash_set<uint64_t>> m_rows;
-
         std::shared_ptr<File> m_file;
         std::string m_name;
         size_t m_headerEnd;

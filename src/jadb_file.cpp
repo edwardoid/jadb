@@ -1,4 +1,5 @@
 #include "jadb_file.h"
+#include "jadb_logger.h"
 
 using namespace jadb;
 
@@ -79,6 +80,10 @@ void File::write(const char* data, size_t size)
 {
     Lock lock(*this);
     m_stream.write(data, size);
+    if(m_stream.bad())
+    {
+        Logger::err() << "Write operation failed. File: " << m_path.string();
+    }
     m_dirty = true;
 }
 
@@ -91,6 +96,14 @@ void File::read(char* data, size_t size)
         m_dirty = false;
     }
     m_stream.read(data, size);
+    if(m_stream.bad())
+    {
+        Logger::err() << "Read operation failed. File: " << m_path.string();
+    }
+    else if(m_stream.gcount() != size)
+    {
+        Logger::err() << "Read operation failed. File: " << m_path.string() << " asked to read " << size << " got " << (size_t)m_stream.gcount();
+    }
 }
 void File::flush()
 {

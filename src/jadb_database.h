@@ -14,7 +14,7 @@ namespace jadb
     class Database
     {
     public:
-        Database(std::string name);
+        Database(std::string& name);
         ~Database();
         std::unordered_map<std::string, std::shared_ptr<Collection>>& collections();
         Collection& operator[] (const std::string name);

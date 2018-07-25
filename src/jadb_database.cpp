@@ -5,7 +5,7 @@
 using namespace jadb;
 
 
-Database::Database(std::string name)
+Database::Database(std::string& name)
 {
     m_path = boost::filesystem::canonical(Configuration::root());
     m_path.append(name);

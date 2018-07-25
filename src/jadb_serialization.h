@@ -7,6 +7,7 @@
 #include <list>
 #include <map>
 #include <unordered_map>
+#include <boost/endian/conversion.hpp>
 
 namespace jadb
 {
@@ -55,6 +56,28 @@ namespace jadb
         }
     }
 
+    class NumberSerialization
+    {
+    public:
+        NumberSerialization(std::shared_ptr<File> stream)
+            : m_stream(stream)
+        {}
+        ~NumberSerialization() = default;
+        template<typename T>
+        void serialize(const T& obj)
+        {
+            m_stream->write(reinterpret_cast<const char*>(&obj), sizeof(obj));
+        }
+
+        template<typename T>
+        void deserialize(T& obj)
+        {
+            m_stream->read(reinterpret_cast<char*>(&obj), sizeof(obj));
+        }
+    protected:
+        std::shared_ptr<File> m_stream;
+    };
+
     class MapSerialization
     {
     public:
@@ -66,8 +89,7 @@ namespace jadb
         template<typename K, typename V, class Container = std::map<K, V>, class KeySerializer = Serialization, class ValueSerilizer = Serialization>
         void serialize(const Container& obj)
         {
-            const uint32_t sz = static_cast<uint32_t>(obj.size());
-            Serialization(m_stream).serialize<uint32_t>(sz);
+            Serialization(m_stream).serialize<size_t>(obj.size());
             for (auto& kp : obj)
             {
                 KeySerializer(m_stream).serialize(kp.first);
@@ -78,8 +100,8 @@ namespace jadb
         template<typename K, typename V, class Container = std::map<K, V>, class KeySerializer = Serialization, class ValueSerilizer = Serialization>
         void deserialize(Container& obj)
         {
-            uint32_t sz = 0;
-            Serialization(m_stream).deserialize<uint32_t>(sz);
+            size_t sz = 0;
+            Serialization(m_stream).deserialize<size_t>(sz);
             while (sz--)
             {
                 K key;

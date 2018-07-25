@@ -17,7 +17,6 @@
 
 void start(boost::filesystem::path root)
 {
-    jadb::STLHashMapMapping m;
     jadb::Configuration::load(root);
 
     std::unordered_map<std::string, std::shared_ptr<jadb::Database>> databases;

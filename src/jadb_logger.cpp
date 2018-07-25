@@ -68,6 +68,13 @@ void Logger::Message::end()
     m_ss << boost::posix_time::to_simple_string(now) << " [" << m_level << "] : ";
     while (m_identCount--)
         m_ss << '\t';
+    if (m_level == "ERR")
+        m_ss << "\033[1;31";
+    else if (m_level == "DBG")
+        m_ss << "\033[1;33";
+    else
+        m_ss << "\033[0m";
+
     m_ss << str << '\n';
 
     m_instance.write(m_ss.str());

@@ -12,6 +12,7 @@
 #include "jadb_index_file.h"
 #include "jadb_mapper.h"
 #include "jadb_query.h"
+#include "jadb_id_mapping.h"
 
 namespace jadb
 {
@@ -44,11 +45,12 @@ namespace jadb
         boost::filesystem::path m_path;
         boost::filesystem::path m_dataDir;
         boost::filesystem::path m_indicesDir;
-        std::atomic<uint32_t> m_ids;
+        std::atomic<uint64_t> m_ids;
         class Database* m_db;
         std::recursive_mutex m_mx;
         std::unordered_map < std::string, std::shared_ptr<DataFile>> m_data;
         std::unordered_map < std::string, std::shared_ptr<IndexFile>> m_indices;
+        IdMapping m_records; // Mapping ID -> hash
         Mapper<uint64_t> m_mapper;
     };
 }
