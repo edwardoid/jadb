@@ -1,15 +1,12 @@
-[submodule "3dp/sparsepp"]
-	path = 3dp/sparsepp
-	url = https://github.com/greg7mdp/sparsepp.git
-[submodule "3dp/rapidjson"]
-	path = 3dp/rapidjson
-	url = https://github.com/Tencent/rapidjson.git
-[submodule "3dp/nlohmann"]
-	path = 3dp/nlohmann
-	url = https://github.com/nlohmann/json
 [submodule "3dp/sws"]
 	path = 3dp/sws
 	url = https://github.com/eidheim/Simple-Web-Server.git
 [submodule "3dp/cpp-btree"]
 	path = 3dp/cpp-btree
 	url = https://github.com/diegocaro/cpp-btree.git
+[submodule "3dp/nlohmann"]
+	path = 3dp/nlohmann
+	url = https://github.com/nlohmann/json.git
+[submodule "3dp/sparsepp"]
+	path = 3dp/sparsepp
+	url = https://github.com/greg7mdp/sparsepp.git
