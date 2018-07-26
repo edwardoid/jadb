@@ -2,11 +2,11 @@
 #define JADB_LOGIC_CONDITIONS_H
 
 #include "jadb_collection.h"
-#include "jadb_generic_condition.h"
+#include "jadb_generic_conditions.h"
 
 namespace jadb
 {
-    class And : public GenericCondition
+    class And : public MultiEntryCondition
     {
     public:
         And();
@@ -14,7 +14,7 @@ namespace jadb
         virtual bool exec(const Collection& collection, btree::btree_set<uint64_t>*& filter) const override;
     };
 
-    class Or : public GenericCondition
+    class Or : public MultiEntryCondition
     {
     public:
         Or();

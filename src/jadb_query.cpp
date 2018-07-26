@@ -25,31 +25,16 @@ bool Query::create(const nlohmann::json& doc)
 
     auto& q = *it;
 
-    if (!q.is_object())
+    if (!q.is_object() || q.size() != 1)
     {
         return false;
     }
 
-
-    for(nlohmann::json::const_iterator i = q.begin(); i != q.end(); ++i)
-    {
-        Condition* c = ConditionBuilder::create(i.key(), *i);
-        if (c == nullptr)
-        {
-            return false;
-        }
-        m_q.emplace_back(std::unique_ptr<Condition>(c));
-    }
-
-    return m_q.size() > 0;
+    m_q = std::unique_ptr<Condition>(ConditionBuilder::create(q));
+    return m_q != nullptr;
 }
 
 bool Query::exec(const Collection* collection, btree::btree_set<uint64_t>*& filter) const
 {
-    for (auto& c : m_q)
-    {
-        c->exec(*collection, filter);
-    }
-
-    return true;
+    return m_q->exec(*collection, filter);
 }

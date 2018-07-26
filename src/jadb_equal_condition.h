@@ -91,9 +91,14 @@ namespace jadb
                         break;
                     }
 
-                    if(c.fn(data[c.key], c.to))
+                    if(Result == c.fn(data[c.key], c.to))
                     {
                         ok = true;
+                    }
+                    else
+                    {
+                        ok = false;
+                        break;
                     }
                 }
 

@@ -9,7 +9,7 @@ bool And::exec(const Collection& collection, btree::btree_set<uint64_t>*& filter
 {
     for (auto& c : m_conditions)
     {
-        if (c->exec(collection, filter))
+        if (!c->exec(collection, filter))
         {
             return false;
         }
@@ -23,13 +23,23 @@ Or::~Or() {}
 
 bool Or::exec(const Collection& collection, btree::btree_set<uint64_t>*& filter) const
 {
+    bool res = false;
     for (auto& c : m_conditions)
     {
-        if (c->exec(collection, filter))
+        btree::btree_set<uint64_t>* f = nullptr;
+
+        if (c->exec(collection, f))
         {
-            return true;
+            res = true;
+            if(f != nullptr)
+            {
+                if(filter == nullptr)
+                    filter = new btree::btree_set<uint64_t>();
+                filter->insert(f->begin(), f->end());
+                delete f;
+            }
         }
     }
 
-    return false;
+    return res;
 }

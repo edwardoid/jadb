@@ -28,7 +28,7 @@ namespace jadb
 
         static Type type(const std::string& key);
         static Type type(const nlohmann::json& obj, bool& hasKey);
-        static Condition* create(const std::string& key, const nlohmann::json& obj);
+        static Condition* create(const nlohmann::json& obj);
     private:
         static const std::unordered_map<std::string, Type> m_typesMapping;
     };

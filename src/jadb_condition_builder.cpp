@@ -51,35 +51,24 @@ ConditionBuilder::Type ConditionBuilder::type(const nlohmann::json& obj, bool& h
     Type tp = Type::Unsupported;
     if (obj.size() == 1)
     {
-        tp = type(*obj.cbegin());
+        tp = type(obj);
         hasKey = tp != Type::Unsupported;
     }
     if (tp == Type::Unsupported)
         tp = Type::Equal;
-    return tp;
+    return tp;  
 }
 
-Condition* ConditionBuilder::create(const std::string& key, const nlohmann::json& val)
+Condition* ConditionBuilder::create(const nlohmann::json& val)
 {
     Condition* c = nullptr;
 
-    Type tp = Type::Unsupported;
-
+    if (!val.is_object() || val.size() != 1)
+        return nullptr;
+    auto i = val.begin();
+    auto key = i.key();
+    Type tp = type(i.key());
     nlohmann::json data;
-    if (key.empty())
-    {
-        bool hasKey = false;
-        tp = type(val, hasKey);
-        if (tp != Type::Unsupported && hasKey)
-        {
-            data = *(val.begin());
-        }
-    }
-    else
-    {
-        tp = type(key);
-        data = val;
-    }
 
     switch (tp)
     {
@@ -120,7 +109,7 @@ Condition* ConditionBuilder::create(const std::string& key, const nlohmann::json
     }
     if (c != nullptr)
     {
-        if (!c->create(data))
+        if (!c->create(i.value()))
         {
             delete c;
             c = nullptr;

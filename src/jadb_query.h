@@ -15,7 +15,7 @@ namespace jadb
         bool create(const nlohmann::json& doc);
         bool exec(const class Collection* collection, btree::btree_set<uint64_t>*& filter) const;
     private:
-        std::vector<std::unique_ptr<class Condition>> m_q;
+        std::unique_ptr<class Condition> m_q;
     };
 }
 
