@@ -12,10 +12,11 @@ void Configuration::load(boost::filesystem::path path)
 {
     try
     {
-        if(!boost::filesystem::exists(path.parent_path()))
-            boost::filesystem::create_directories(path.parent_path());
+        path = boost::filesystem::absolute(path);
+        Logger::msg() << "Loading configuration from " << path.string();
         m_instance.m_path = path;
         m_instance.m_root = path.parent_path();
+        Logger::msg() << "Loading configuration from " << path.string();
         boost::filesystem::ifstream is(path);
         if (is.good())
         {
@@ -24,7 +25,9 @@ void Configuration::load(boost::filesystem::path path)
             m_instance.m_port = cfg.get<uint16_t>("rest.port", 8080);
             m_instance.m_sslEnabled = cfg.get<bool>("rest.secure", false);
             m_instance.m_compressionEnabled = cfg.get<bool>("data.compression", false);
-            m_instance.m_root = cfg.get <std::string> ("data.root", path.parent_path().generic_string());
+            m_instance.m_root = boost::filesystem::absolute(
+                        boost::filesystem::path(cfg.get <std::string> ("data.root", boost::filesystem::current_path().string()))
+                    ).string();
             boost::filesystem::create_directories(m_instance.m_root);
         }
         else
@@ -75,7 +78,7 @@ void Configuration::save()
         cfg.put<bool>("rest.secure", m_instance.m_sslEnabled);
         cfg.put<bool>("data.compression", m_instance.m_compressionEnabled);
         cfg.put<uint32_t>("data.max_record_size", m_instance.m_maxDataSize);
-        cfg.put<std::string>("data.root", m_instance.m_root.generic_string());
+        cfg.put<std::string>("data.root", m_instance.m_root.string());
         boost::property_tree::write_json(is, cfg);
     }
     catch (const std::exception& e)

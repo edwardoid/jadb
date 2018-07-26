@@ -15,8 +15,13 @@
 
 #include <nlohmann/json.hpp>
 
-void start(boost::filesystem::path root)
+void help()
 {
+    jadb::Logger::msg() << "Usage: jadb --config=<cofig file path>";
+}
+
+void start(boost::filesystem::path root)
+{   
     jadb::Configuration::load(root);
 
     std::unordered_map<std::string, std::shared_ptr<jadb::Database>> databases;
@@ -81,6 +86,12 @@ int main(int argc, char** argv)
 
     boost::program_options::variables_map arguments;
     boost::program_options::store(boost::program_options::parse_command_line(argc, argv, ops), arguments);
+
+    if (arguments.count("help") || arguments.count("h"))
+    {
+        help();
+        return 0;
+    }
 
     root = arguments.at("config").as<boost::filesystem::path>();
     start(root);

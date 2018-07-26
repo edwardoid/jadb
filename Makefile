@@ -20,7 +20,7 @@ binary: $(OBJ_FILES)
 
 .PHONY: run
 run: binary
-	./$(BIN_DIR)$(BINARY_TARGET)
+	$(BIN_DIR)$(BINARY_TARGET) --config=$(PWD)/config.json
 $(OBJ_DIR)%.o: $(SRC_DIR)%.cpp
 	@ echo "Compiling $@"
 	@ $(CC) -c $< -I$(INC_DIR) -o $@
