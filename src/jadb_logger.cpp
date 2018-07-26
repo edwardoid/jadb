@@ -69,9 +69,9 @@ void Logger::Message::end()
     while (m_identCount--)
         m_ss << '\t';
     if (m_level == "ERR")
-        m_ss << "\033[1;31";
+        m_ss << "\033[1;31m";
     else if (m_level == "DBG")
-        m_ss << "\033[1;33";
+        m_ss << "\033[1;33m";
     else
         m_ss << "\033[0m";
 
