@@ -113,16 +113,13 @@ void Collection::createIndex(std::string name, std::vector<std::string> &fields)
     auto path = indexFilePath(name);
     auto index = std::make_shared<IndexFile>(path, name, fields);
     m_indices.insert(std::make_pair(path.generic_string(), index));
-    for (auto& dt : m_data)
+
+    auto b = recordsBegin();
+    auto e = recordsEnd();
+
+    for(; b != e; ++b)
     {
-        auto b = dt.second->begin();
-        auto e = dt.second->end();
-        while (b != e)
-        {
-            if(dt.second->checkSignature(Record::RecordSignature, b.absolutePos()))
-                index->add(*b);
-            ++b;
-        }
+        index->add(get(b->first, true));
     }
 }
 
@@ -147,7 +144,7 @@ std::vector<Record> Collection::searchByIndex(std::string index, std::unordered_
     return res;
 }
 
-std::vector<Record> Collection::query(const Query& query)
+std::vector<Record> Collection::query(const Query& query, size_t& all, size_t limit, size_t skip)
 {
     std::vector<Record> res;
     btree::btree_set<uint64_t>* filter = nullptr;
@@ -159,11 +156,21 @@ std::vector<Record> Collection::query(const Query& query)
         }
     }
 
+    all = 0;
     if(filter != nullptr)
     {
-        for(auto id : *filter)
+        all = filter->size();
+        auto b = filter->begin();
+        while(skip-- && b != filter->end())
+            ++b;
+        auto e = b;
+        while(limit-- && e != filter->end())
+            ++e;
+
+        while(b != e)
         {
-            res.emplace_back(get(id, true));
+            res.emplace_back(get(*b, true));
+            ++b;
         }
     }
     return res;

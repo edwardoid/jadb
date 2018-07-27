@@ -72,7 +72,11 @@ void Configuration::load(boost::filesystem::path path)
             auto val = cfg[DATA_ROOT];
             if(val.is_string())
             {
-                m_instance.m_root = boost::filesystem::absolute(boost::filesystem::path(val.dump()));
+                auto p = boost::filesystem::path(static_cast<std::string>(val));
+                if(p.is_absolute())
+                    m_instance.m_root = p;
+                else
+                    m_instance.m_root = boost::filesystem::absolute(p);
             }
             boost::filesystem::create_directories(m_instance.m_root);
         }
@@ -120,7 +124,7 @@ void Configuration::save()
         cfg["data"]["compression"] = m_instance.m_compressionEnabled;
         cfg["data"]["max_record_size"] = m_instance.m_maxDataSize;
         cfg["data"]["root"] = m_instance.m_root.string();
-        os << cfg.dump();
+        os << cfg.dump(4);
         os.flush();
         os.close();
     }

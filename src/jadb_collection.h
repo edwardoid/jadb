@@ -35,7 +35,7 @@ namespace jadb
         uint32_t recordsPerFile() const;
         void createIndex(std::string name, std::vector<std::string>& properties);
         std::vector<Record> searchByIndex(std::string index, std::unordered_map<std::string, std::string>& filter, size_t limit = 999, size_t skip = 0);
-        std::vector<Record> query(const Query& query);
+        std::vector<Record> query(const Query& query, size_t& all, size_t limit = 999, size_t skip = 0);
         IdMapping::ConstIterator recordsBegin() const;
         IdMapping::ConstIterator recordsEnd() const;
     private:

@@ -247,12 +247,6 @@ void RESTApi::createIndex(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Respo
         return;
     }
 
-    if (fields.empty() == 0)
-    {
-        response->write(SimpleWeb::StatusCode::client_error_bad_request);
-        return;
-    }
-
     auto fieldsIt = fields.find("fields");    
     if (fieldsIt == fields.end() || !fieldsIt->is_array())
     {
@@ -341,8 +335,8 @@ void RESTApi::searchByIndex(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Res
     }
 
     nlohmann::json doc = {
-        { "items" , list},
-        { "items" , res.size() }
+        { "docs" , list},
+        { "count" , res.size() }
     };
 
     WriteJson(response, doc);
@@ -376,7 +370,27 @@ void RESTApi::query(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Response> r
             return;
         }
         auto collection = database->second->collections()[name];
-        auto res = collection->query(q);
+
+        size_t all = 0;
+        
+        auto query = request->parse_query_string();
+        size_t skip = 0;
+        auto skipPos = query.find("skip");
+        if (skipPos != query.end())
+        {
+            skip = atoll(skipPos->second.c_str());
+            query.erase(skipPos);
+        }
+
+        size_t limit = 999;
+        auto limitPos = query.find("limit");
+        if (limitPos != query.end())
+        {
+            limit = atoll(limitPos->second.c_str());
+            query.erase(limitPos);
+        }
+
+        auto res = collection->query(q, all, limit, skip);
 
         nlohmann::json list = nlohmann::json::array();
         for (auto& r : res)
@@ -386,6 +400,7 @@ void RESTApi::query(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Response> r
 
         nlohmann::json resp = {
             { "docs" , list},
+            { "all" , all },
             { "count" , res.size() }
         };
 
