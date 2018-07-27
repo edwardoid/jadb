@@ -25,7 +25,7 @@ void Statistics::report()
     while (1)
     {
         std::this_thread::sleep_for(std::chrono::seconds(10));
-        double delta = (double)(clock() - m_instance.m_lastReport) / (double)(CLOCKS_PER_SEC);
+        double delta = (double)(clock() - m_instance.m_lastReport) / (double)(CLOCKS_PER_SEC / 1000);
         for (size_t i = 0; i <= (size_t)(Type::Unknown); ++i)
         {
             auto m = Logger::msg(1);
@@ -80,7 +80,7 @@ void Statistics::report()
             }
             }
 
-            m << "took " << len << " sec.";
+            m << "took " << len << " msec.";
         }
         m_instance.m_lastReport = clock();
     }

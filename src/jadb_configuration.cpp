@@ -1,8 +1,13 @@
 #include "jadb_configuration.h"
 #include "jadb_logger.h"
 #include <boost/filesystem.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
+#include <nlohmann/json.hpp>
+
+#define REST_PORT "rest.port"
+#define REST_SECURE "rest.secure"
+
+#define DATA_COMPRESSION "data.compression"
+#define DATA_ROOT "data.root"
 
 using namespace jadb;
 
@@ -18,22 +23,58 @@ void Configuration::load(boost::filesystem::path path)
         m_instance.m_root = path.parent_path();
         Logger::msg() << "Loading configuration from " << path.string();
         boost::filesystem::ifstream is(path);
-        if (is.good())
-        {
-            boost::property_tree::ptree cfg;
-            boost::property_tree::read_json(is, cfg);
-            m_instance.m_port = cfg.get<uint16_t>("rest.port", 8080);
-            m_instance.m_sslEnabled = cfg.get<bool>("rest.secure", false);
-            m_instance.m_compressionEnabled = cfg.get<bool>("data.compression", false);
-            m_instance.m_root = boost::filesystem::absolute(
-                        boost::filesystem::path(cfg.get <std::string> ("data.root", boost::filesystem::current_path().string()))
-                    ).string();
-            boost::filesystem::create_directories(m_instance.m_root);
+
+        std::string json;
+        while(is.good()) {
+            std::string tmp;
+            is >> tmp;
+            json += tmp;
         }
-        else
+
+
+        auto cfg = nlohmann::json::parse(json);
+
+        m_instance.m_port = 8080;
+        m_instance.m_sslEnabled = false;
+        m_instance.m_compressionEnabled = false;
+        m_instance.m_root = boost::filesystem::current_path();
+
+        if(cfg.find(REST_PORT) != cfg.end())
         {
-            save();
-            load(path);
+            auto val = cfg[REST_PORT];
+            if(val.is_number_integer())
+            {
+                m_instance.m_port = static_cast<uint16_t>(val);
+            }
+        }
+
+
+        if(cfg.find(REST_SECURE) != cfg.end())
+        {
+            auto val = cfg[REST_SECURE];
+            if(val.is_boolean())
+            {
+                m_instance.m_sslEnabled = static_cast<bool>(val);
+            }
+        }
+
+        if(cfg.find(DATA_COMPRESSION) != cfg.end())
+        {
+            auto val = cfg[DATA_COMPRESSION];
+            if(val.is_boolean())
+            {
+                m_instance.m_compressionEnabled = static_cast<bool>(val);
+            }
+        }
+
+        if(cfg.find(DATA_ROOT) != cfg.end())
+        {
+            auto val = cfg[DATA_ROOT];
+            if(val.is_string())
+            {
+                m_instance.m_root = boost::filesystem::absolute(boost::filesystem::path(val.dump()));
+            }
+            boost::filesystem::create_directories(m_instance.m_root);
         }
     }
     catch (const std::exception& e)
@@ -71,15 +112,17 @@ void Configuration::save()
 {
     try
     {
-        boost::filesystem::ofstream is(m_instance.m_path);
-        boost::property_tree::ptree cfg;
+        nlohmann::json cfg;
+        boost::filesystem::ofstream os(m_instance.m_path);
             
-        cfg.put<uint16_t>("rest.port", m_instance.m_port);
-        cfg.put<bool>("rest.secure", m_instance.m_sslEnabled);
-        cfg.put<bool>("data.compression", m_instance.m_compressionEnabled);
-        cfg.put<uint32_t>("data.max_record_size", m_instance.m_maxDataSize);
-        cfg.put<std::string>("data.root", m_instance.m_root.string());
-        boost::property_tree::write_json(is, cfg);
+        cfg["rest"]["port"] = m_instance.m_port;
+        cfg["rest"]["secure"] = m_instance.m_sslEnabled;
+        cfg["data"]["compression"] = m_instance.m_compressionEnabled;
+        cfg["data"]["max_record_size"] = m_instance.m_maxDataSize;
+        cfg["data"]["root"] = m_instance.m_root.string();
+        os << cfg.dump();
+        os.flush();
+        os.close();
     }
     catch (const std::exception& e)
     {

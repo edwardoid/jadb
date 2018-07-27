@@ -386,7 +386,7 @@ void RESTApi::query(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Response> r
 
         nlohmann::json resp = {
             { "docs" , list},
-            { "size" , res.size() }
+            { "count" , res.size() }
         };
 
         WriteJson(response, resp);
