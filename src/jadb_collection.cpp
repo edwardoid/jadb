@@ -34,7 +34,7 @@ Collection::Collection(std::string name, boost::filesystem::path path, class Dat
     file->close();
     file->open(std::ios::in | std::ios::binary);
     file->lock();
-    uint64_t nextId = 0;
+    uint64_t nextId = 1;
 
     if(!newCollection)
     {
@@ -80,7 +80,7 @@ Collection::Collection(std::string name, boost::filesystem::path path, class Dat
         file->lock();
         file->open(std::ios::out | std::ios::binary | std::ios::trunc);
 
-        Serialization(file).serialize(m_ids.load());
+        Serialization(file).serialize(static_cast<uint64_t>(m_ids.load()));
         ArraySerialization(file).serialize<std::string>(indices);
         ArraySerialization(file).serialize<std::string>(data);
         Serialization(file).serialize(m_records);
@@ -270,7 +270,7 @@ void Collection::remove(uint64_t id)
     if (file == nullptr)
         return;
     auto it = (file->begin() + pos.Offset);
-    if (file->checkSignature(Record::RecordSignature, it.absolutePos()))
+    if (file->checkSignature(RECORD_SIGNATURE, it.absolutePos()))
     {
         file->write(~RECORD_SIGNATURE, it.absolutePos());
         file->recordRemoved();
@@ -300,7 +300,7 @@ Record Collection::get(uint64_t id, bool fast) const
         if (file != nullptr)
         {
             auto it = (file->begin() + pos.Offset);
-            if (fast || file->checkSignature(Record::RecordSignature, it.absolutePos()))
+            if (file->checkSignature(RECORD_SIGNATURE, it.absolutePos()))
                 return *it;
         }
     }

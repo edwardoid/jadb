@@ -1,6 +1,5 @@
 #directories
 bin/*
-tests/*
 dep/*
 # Prerequisites
 *.d

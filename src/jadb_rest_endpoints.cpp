@@ -158,15 +158,21 @@ void RESTApi::insertRecord(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Resp
 
     auto col = colPos->second;
 
-    Record rec(request->content.string());
+    try {
+        Record rec(request->content.string());
 
-    if (col->insert(rec) == 0)
-    {
+        if (col->insert(rec) == 0)
+        {
+            response->write(SimpleWeb::StatusCode::client_error_bad_request);
+            return;
+        }
+
+        WriteJson(response, rec.m_data);
+    }
+    catch(...) {
         response->write(SimpleWeb::StatusCode::client_error_bad_request);
         return;
     }
-
-    WriteJson(response, rec.m_data);
 }
 
 void RESTApi::deleteRecord(UrlBuilder& url, std::shared_ptr<HttpServerImpl::Response> response, std::shared_ptr<HttpServerImpl::Request> request)

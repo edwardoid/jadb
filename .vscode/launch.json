@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/jadb",
-            "args": ["--config=/home/esargsyan/jadb/config.json"],
+            "args": ["--config=config.json"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

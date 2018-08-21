@@ -23,21 +23,19 @@ namespace jadb
     {
     public:
         Record(const Record& src);
-        Record(Record&& src);
+        Record(const Record&& src);
         Record(uint64_t id = 0);
-        Record(std::string json);
-        Record(nlohmann::json& object);
+        Record(const std::string& json);
+        Record(const nlohmann::json& object);
         Record(const std::vector<uint8_t>& raw);
         ~Record();
         uint64_t id() const;
         void setId(uint64_t);
-        void generateId();
         static const uint32_t RecordSignature;
 
         std::ostream& view(std::ostream& os);
 
         const nlohmann::json& data() const { return m_data; }
-        static std::atomic<uint64_t> NextId;
     protected:
         friend class RESTApi;
         friend class Serialization;

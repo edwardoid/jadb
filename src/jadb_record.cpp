@@ -6,14 +6,12 @@ using namespace jadb;
 const uint32_t Record::RecordSignature = RECORD_SIGNATURE;
 
 
-std::atomic<uint64_t> Record::NextId(1);
-
 Record::Record(const Record& src)
 {
     m_data = src.m_data;
 }
 
-Record::Record(Record&& src)
+Record::Record(const Record&& src)
 {
     m_data = std::move(src.m_data);
 }
@@ -22,23 +20,14 @@ Record::Record(uint64_t id)
 {
 }
 
-Record::Record(std::string json)
+Record::Record(const std::string& json)
 {
     m_data = std::move(nlohmann::json::parse(json));
-    if (m_data.find("__id") == m_data.end())
-    {
-        m_data["__id"] = NextId.fetch_add(1);
-    }
 }
 
-Record::Record(nlohmann::json& doc)
+Record::Record(const nlohmann::json& doc)
     : m_data(doc)
-{
-    if (m_data.find("__id") == m_data.end())
-    {
-        m_data["__id"] = NextId.fetch_add(1);
-    }
-}
+{}
 
 Record::Record(const std::vector<uint8_t>& raw)
     : Record(std::string(raw.cbegin(), raw.cbegin() + raw.size()))
@@ -70,19 +59,7 @@ uint64_t Record::id() const
 
 void Record::setId(uint64_t id)
 {
-    if (m_data.find("__id") == m_data.end())
-    {
-        m_data["__id"] = id;
-    }
-    else
-    {
-        m_data["__id"] = NextId.fetch_add(1);
-    }
-}
-
-void Record::generateId()
-{
-    setId(NextId.fetch_add(1));
+    m_data["__id"] = id;
 }
 
 Record::~Record()

@@ -3,11 +3,13 @@
 #include <boost/filesystem.hpp>
 #include <nlohmann/json.hpp>
 
-#define REST_PORT "rest.port"
-#define REST_SECURE "rest.secure"
+#define REST "rest"
+#define REST_PORT "port"
+#define REST_SECURE "secure"
 
-#define DATA_COMPRESSION "data.compression"
-#define DATA_ROOT "data.root"
+#define DATA "data"
+#define DATA_COMPRESSION "compression"
+#define DATA_ROOT "root"
 
 using namespace jadb;
 
@@ -39,46 +41,40 @@ void Configuration::load(boost::filesystem::path path)
         m_instance.m_compressionEnabled = false;
         m_instance.m_root = boost::filesystem::current_path();
 
-        if(cfg.find(REST_PORT) != cfg.end())
+        auto restIt = cfg.find(REST);
+        if(restIt != cfg.end() && restIt->is_object())
         {
-            auto val = cfg[REST_PORT];
-            if(val.is_number_integer())
+            auto& rest = cfg[REST];
+            if(rest.count(REST_PORT) != 0 && rest[REST_PORT].is_number_integer())
             {
-                m_instance.m_port = static_cast<uint16_t>(val);
+                m_instance.m_port = static_cast<uint16_t>(rest[REST_PORT]);
+            }
+
+            if(rest.count(REST_SECURE) != 0 && rest[REST_SECURE].is_boolean())
+            {
+                m_instance.m_sslEnabled = static_cast<bool>(rest[REST_SECURE]);
             }
         }
 
-
-        if(cfg.find(REST_SECURE) != cfg.end())
+        auto dataIt = cfg.find(DATA);
+        if(dataIt != cfg.end() && dataIt->is_object())
         {
-            auto val = cfg[REST_SECURE];
-            if(val.is_boolean())
+            auto& data = cfg[DATA];
+            if(data.count(DATA_COMPRESSION) != 0 && data[DATA_COMPRESSION].is_boolean())
             {
-                m_instance.m_sslEnabled = static_cast<bool>(val);
+                m_instance.m_compressionEnabled = static_cast<bool>(data[DATA_COMPRESSION]);
             }
-        }
 
-        if(cfg.find(DATA_COMPRESSION) != cfg.end())
-        {
-            auto val = cfg[DATA_COMPRESSION];
-            if(val.is_boolean())
+            if(data.count(DATA_ROOT) != 0 && data[DATA_ROOT].is_string())
             {
-                m_instance.m_compressionEnabled = static_cast<bool>(val);
-            }
-        }
-
-        if(cfg.find(DATA_ROOT) != cfg.end())
-        {
-            auto val = cfg[DATA_ROOT];
-            if(val.is_string())
-            {
-                auto p = boost::filesystem::path(static_cast<std::string>(val));
+                auto p = boost::filesystem::path(static_cast<std::string>(data[DATA_ROOT]));
                 if(p.is_absolute())
                     m_instance.m_root = p;
                 else
                     m_instance.m_root = boost::filesystem::absolute(p);
+                
+                boost::filesystem::create_directories(m_instance.m_root);
             }
-            boost::filesystem::create_directories(m_instance.m_root);
         }
     }
     catch (const std::exception& e)
